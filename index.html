@@ -97,14 +97,14 @@
     /* Metrics grid */
     .metrics {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
       margin-bottom: 16px;
     }
     .metric {
       background: white;
       border-radius: 16px;
-      padding: 18px 14px;
+      padding: 14px 10px;
       text-align: center;
       border: 1px solid #e5e7eb;
     }
@@ -124,6 +124,26 @@
     .metric-value.ok { color: #16a34a; }
     .metric-value.warn { color: #d97706; }
     .metric-value.bad { color: #dc2626; }
+
+    /* Verdict BBQ card */
+    .verdict-card {
+      background: white;
+      border-radius: 16px;
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 16px;
+      border: 1px solid #e5e7eb;
+    }
+    .verdict-card.perfect { border-color: #22c55e; background: #f0fdf4; }
+    .verdict-card.bbq { border-color: #f97316; background: #fff7ed; }
+    .verdict-card.pool { border-color: #3b82f6; background: #eff6ff; }
+    .verdict-card.meh { border-color: #e5e7eb; }
+    .verdict-card.cold { border-color: #93c5fd; background: #eff6ff; }
+    .verdict-emoji { font-size: 34px; flex-shrink: 0; }
+    .verdict-label { font-size: 15px; font-weight: 700; color: #111827; }
+    .verdict-sub { font-size: 12px; color: #6b7280; margin-top: 2px; }
 
     /* Pump row */
     .pump-row {
@@ -182,11 +202,26 @@
       <div class="metric-unit">°C</div>
       <div class="metric-label">Température</div>
     </div>
+    <div class="metric loading" id="metric-air-temp">
+      <span class="metric-icon">🌤️</span>
+      <div class="metric-value" id="air-temp-value">—</div>
+      <div class="metric-unit">°C</div>
+      <div class="metric-label">Extérieur</div>
+    </div>
     <div class="metric loading" id="metric-pump-power">
       <span class="metric-icon">⚡</span>
       <div class="metric-value" id="power-value">—</div>
       <div class="metric-unit">Watts</div>
-      <div class="metric-label">Consommation</div>
+      <div class="metric-label">Pompe</div>
+    </div>
+  </div>
+
+  <!-- Verdict BBQ + Piscine -->
+  <div class="verdict-card" id="verdict-card">
+    <span class="verdict-emoji" id="verdict-emoji">⏳</span>
+    <div>
+      <div class="verdict-label" id="verdict-label">Analyse en cours…</div>
+      <div class="verdict-sub" id="verdict-sub"></div>
     </div>
   </div>
 
@@ -202,6 +237,18 @@
 
 <script>
   const STALE_THRESHOLD_MS = 15 * 60 * 1000; // 15 minutes
+
+  function computeVerdict(tempAir, tempWater, swimmable, pumpOn) {
+    if (isNaN(tempAir)) return { cls: 'meh', emoji: '🤔', label: 'Données ext. indisponibles', sub: '' };
+    const bbqOk = tempAir >= 22;
+    const poolSoon = pumpOn && tempWater >= 18;
+    if (bbqOk && swimmable)        return { cls: 'perfect', emoji: '🎉', label: 'Journée parfaite !',     sub: 'BBQ + piscine — tout est réuni !' };
+    if (bbqOk && poolSoon)         return { cls: 'bbq',     emoji: '🔥', label: 'Top pour un BBQ !',      sub: 'La piscine sera bientôt prête' };
+    if (bbqOk)                     return { cls: 'bbq',     emoji: '🔥', label: 'Top pour un BBQ !',      sub: 'Piscine pas encore prête' };
+    if (swimmable)                 return { cls: 'pool',    emoji: '🏊', label: 'Bonne baignade !',       sub: 'Il fait un peu frais dehors' };
+    if (tempAir >= 18)             return { cls: 'meh',     emoji: '⛅', label: 'Journée correcte',      sub: 'Ni vraiment BBQ ni vraiment piscine' };
+    return                                { cls: 'cold',    emoji: '❄️', label: 'Patience…',              sub: 'La belle saison arrive !' };
+  }
 
   function timeAgo(dateStr) {
     const diff = Date.now() - new Date(dateStr).getTime();
@@ -244,6 +291,23 @@
       tempEl.className = 'metric-value ' + (tempC >= 24 ? 'ok' : tempC >= 20 ? 'warn' : 'bad');
     }
     document.getElementById('metric-temp').classList.remove('loading');
+
+    // Température extérieure
+    const tempAir = parseFloat(d.temp_air_c);
+    const airEl = document.getElementById('air-temp-value');
+    if (!isNaN(tempAir)) {
+      airEl.textContent = tempAir.toFixed(1);
+      airEl.className = 'metric-value ' + (tempAir >= 25 ? 'ok' : tempAir >= 20 ? 'warn' : 'bad');
+    }
+    document.getElementById('metric-air-temp').classList.remove('loading');
+
+    // Verdict BBQ + Piscine
+    const verdict = computeVerdict(tempAir, tempC, d.swimmable, d.pump_on);
+    const vCard = document.getElementById('verdict-card');
+    vCard.className = 'verdict-card ' + verdict.cls;
+    document.getElementById('verdict-emoji').textContent = verdict.emoji;
+    document.getElementById('verdict-label').textContent = verdict.label;
+    document.getElementById('verdict-sub').textContent = verdict.sub;
 
     // Puissance pompe
     const powerW = parseFloat(d.pump_power_w);
@@ -295,6 +359,7 @@
     document.getElementById('status-label').textContent = 'Erreur de chargement';
     document.getElementById('status-reason').textContent = 'Vérifier la connexion et réessayer';
     document.getElementById('metric-temp').classList.remove('loading');
+    document.getElementById('metric-air-temp').classList.remove('loading');
     document.getElementById('metric-pump-power').classList.remove('loading');
   }
 
