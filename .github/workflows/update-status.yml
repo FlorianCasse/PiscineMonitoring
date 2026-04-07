@@ -9,7 +9,7 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -27,6 +27,49 @@ jobs:
           PAYLOAD: ${{ toJson(github.event.client_payload) }}
         run: |
           echo "$PAYLOAD" > status.json
+
+      - name: Append to history.json
+        env:
+          PAYLOAD: ${{ toJson(github.event.client_payload) }}
+        run: |
+          python3 << 'EOF'
+          import json, os
+          f = 'history.json'
+          if os.path.exists(f):
+              try:
+                  history = json.loads(open(f).read())
+              except (json.JSONDecodeError, ValueError):
+                  print("WARNING: history.json corrupt — resetting")
+                  history = {"entries": []}
+          else:
+              history = {"entries": []}
+          p = json.loads(os.environ['PAYLOAD'])
+          history["entries"].append({
+              "ts": p.get("updated_at", ""),
+              "temp_water_c": p.get("temp_water_c"),
+              "temp_air_c": p.get("temp_air_c"),
+              "pump_on": p.get("pump_on"),
+              "swimmable": p.get("swimmable")
+          })
+          if len(history["entries"]) > 2016:
+              history["entries"] = history["entries"][-2016:]
+          history["updated_at"] = history["entries"][-1]["ts"]
+          open(f, 'w').write(json.dumps(history))
+          print(f"history.json: {len(history['entries'])} entries")
+          EOF
+
+      - name: Commit history.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add history.json
+          git diff --staged --quiet || git commit -m "data: update history.json"
+          git push
+
+      - name: Inject service worker version
+        shell: bash
+        run: |
+          sed -i "s/SW_VERSION_PLACEHOLDER/${GITHUB_SHA::7}/g" sw.js
 
       - uses: actions/configure-pages@v5
 

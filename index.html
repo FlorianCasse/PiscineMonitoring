@@ -4,6 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ma Piscine</title>
+  <meta name="theme-color" content="#3b82f6">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Ma Piscine">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon.svg">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -74,6 +79,10 @@
     .status-card.stale {
       background: #fef2f2;
       border: 2px solid #ef4444;
+    }
+    .status-card.sensors_fail {
+      background: #fffbeb;
+      border: 2px solid #f59e0b;
     }
 
     @keyframes pulse {
@@ -166,6 +175,25 @@
     .pump-badge.on { background: #dcfce7; color: #166534; }
     .pump-badge.off { background: #fee2e2; color: #991b1b; }
 
+    /* Sparkline */
+    .sparkline { display: block; margin: 6px auto 2px; overflow: visible; }
+
+    /* Forecast card */
+    .forecast-card {
+      background: white;
+      border-radius: 16px;
+      padding: 16px 18px;
+      display: none;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 16px;
+      border: 1px solid #e5e7eb;
+    }
+    .forecast-card.visible { display: flex; }
+    .forecast-icon { font-size: 28px; flex-shrink: 0; }
+    .forecast-label { font-size: 18px; font-weight: 700; color: #111827; }
+    .forecast-sub { font-size: 12px; color: #6b7280; margin-top: 2px; }
+
     /* Footer */
     .footer {
       text-align: center;
@@ -200,6 +228,7 @@
       <span class="metric-icon">🌡️</span>
       <div class="metric-value" id="temp-value">—</div>
       <div class="metric-unit">°C</div>
+      <svg id="temp-sparkline" class="sparkline" width="80" height="30"></svg>
       <div class="metric-label">Température</div>
     </div>
     <div class="metric loading" id="metric-air-temp">
@@ -213,6 +242,15 @@
       <div class="metric-value" id="power-value">—</div>
       <div class="metric-unit">Watts</div>
       <div class="metric-label">Pompe</div>
+    </div>
+  </div>
+
+  <!-- Forecast card -->
+  <div class="forecast-card" id="forecast-card">
+    <span class="forecast-icon">🔮</span>
+    <div>
+      <div class="forecast-label" id="forecast-label">—</div>
+      <div class="forecast-sub" id="forecast-sub"></div>
     </div>
   </div>
 
@@ -276,11 +314,18 @@
     } else {
       document.getElementById('stale-banner').classList.remove('visible');
       const card = document.getElementById('status-card');
-      card.className = d.swimmable ? 'status-card ok' : 'status-card no';
-      document.getElementById('status-icon').textContent = d.swimmable ? '🟢' : '🔴';
-      // textContent only — jamais innerHTML (XSS prevention)
-      document.getElementById('status-label').textContent = d.swimmable ? 'Eau OK pour se baigner !' : 'Pas de baignade pour l\'instant';
-      document.getElementById('status-reason').textContent = d.reason || '';
+      if (d.sensors_ok === false) {
+        card.className = 'status-card sensors_fail';
+        document.getElementById('status-icon').textContent = '⚠️';
+        document.getElementById('status-label').textContent = 'Capteur indétectable';
+        document.getElementById('status-reason').textContent = 'Vérifier HA — capteur hors ligne';
+      } else {
+        card.className = d.swimmable ? 'status-card ok' : 'status-card no';
+        document.getElementById('status-icon').textContent = d.swimmable ? '🟢' : '🔴';
+        // textContent only — jamais innerHTML (XSS prevention)
+        document.getElementById('status-label').textContent = d.swimmable ? 'Eau OK pour se baigner !' : 'Pas de baignade pour l\'instant';
+        document.getElementById('status-reason').textContent = d.reason || '';
+      }
     }
 
     // Température
@@ -291,6 +336,7 @@
       tempEl.className = 'metric-value ' + (tempC >= 24 ? 'ok' : tempC >= 20 ? 'warn' : 'bad');
     }
     document.getElementById('metric-temp').classList.remove('loading');
+    if (!isNaN(tempC)) renderForecast(tempC);
 
     // Température extérieure
     const tempAir = parseFloat(d.temp_air_c);
@@ -328,6 +374,65 @@
   }
 
   let lastGoodData = null;
+  let historyEntries = [];
+
+  function renderSparkline(entries) {
+    const svg = document.getElementById('temp-sparkline');
+    if (!entries || entries.length < 2) return;
+    const window288 = entries.slice(-288);
+    const temps = window288.map(e => e.temp_water_c).filter(t => typeof t === 'number' && !isNaN(t));
+    if (temps.length < 2) return;
+    const min = Math.min(...temps);
+    const max = Math.max(...temps);
+    const W = 80, H = 30;
+    const step = W / (temps.length - 1);
+    const points = temps.map((t, i) => {
+      const x = (i * step).toFixed(1);
+      const y = (max === min ? 15 : H - (t - min) / (max - min) * H).toFixed(1);
+      return x + ',' + y;
+    }).join(' ');
+    svg.innerHTML = '<polyline points="' + points + '" fill="none" stroke="#3b82f6" stroke-width="1.5"/>';
+  }
+
+  function computeForecast(entries, currentTemp) {
+    if (currentTemp >= 20) return null;
+    if (!entries || entries.length < 12) return { text: 'Données insuffisantes', sub: '' };
+    const w = entries.slice(-12);
+    const first = w[0], last = w[w.length - 1];
+    const dtMs = new Date(last.ts) - new Date(first.ts);
+    if (dtMs <= 0) return { text: 'Données insuffisantes', sub: '' };
+    const slope = (last.temp_water_c - first.temp_water_c) / dtMs;
+    const THRESHOLD = 0.01 / 3600000;
+    if (Math.abs(slope) < THRESHOLD) return { text: 'Stable', sub: currentTemp.toFixed(1) + '°C — pas de tendance' };
+    if (slope < -THRESHOLD) return { text: 'Refroidit', sub: currentTemp.toFixed(1) + '°C en baisse' };
+    const etaMs = (20 - currentTemp) / slope;
+    if (etaMs > 24 * 3600000) return { text: "Pas aujourd'hui", sub: currentTemp.toFixed(1) + '°C — chauffe trop lentement' };
+    const eta = new Date(Date.now() + etaMs);
+    const h = eta.getHours(), m = eta.getMinutes();
+    const timeStr = m < 15 ? h + 'h' : m < 45 ? h + 'h30' : ((h + 1) % 24) + 'h';
+    return { text: 'Prête vers ' + timeStr, sub: currentTemp.toFixed(1) + '°C — ça monte !' };
+  }
+
+  function renderForecast(tempC) {
+    const forecast = computeForecast(historyEntries, tempC);
+    const card = document.getElementById('forecast-card');
+    if (!forecast) { card.classList.remove('visible'); return; }
+    card.classList.add('visible');
+    document.getElementById('forecast-label').textContent = forecast.text;
+    document.getElementById('forecast-sub').textContent = forecast.sub;
+  }
+
+  async function fetchHistory() {
+    try {
+      const res = await fetch('history.json?ts=' + Date.now());
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      historyEntries = data.entries || [];
+      renderSparkline(historyEntries);
+    } catch (e) {
+      // history unavailable — sparkline and forecast stay hidden
+    }
+  }
 
   async function fetchStatus() {
     try {
@@ -365,7 +470,14 @@
 
   // Initial load + refresh toutes les 5 min
   fetchStatus();
+  fetchHistory();
   setInterval(fetchStatus, 5 * 60 * 1000);
+  setInterval(fetchHistory, 5 * 60 * 1000);
+
+  // Service worker (PWA offline support)
+  if ('serviceWorker' in navigator) {
+    try { navigator.serviceWorker.register('sw.js'); } catch (_) {}
+  }
 </script>
 </body>
 </html>
