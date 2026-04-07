@@ -1,0 +1,9 @@
+{
+  "swimmable": false,
+  "reason": "Pompe à l'arrêt — filtration requise",
+  "temp_water_c": 16.0,
+  "pump_on": false,
+  "pump_power_w": 0.0,
+  "sensors_ok": true,
+  "updated_at": "2026-04-07T12:00:00+02:00"
+}

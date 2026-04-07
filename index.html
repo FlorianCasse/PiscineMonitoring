@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ma Piscine</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    .container {
+      max-width: 420px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0 16px;
+    }
+    .header-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #374151;
+    }
+    .header-time {
+      font-size: 12px;
+      color: #9ca3af;
+    }
+
+    /* Staleness banner */
+    .stale-banner {
+      background: #dc2626;
+      color: white;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 10px 16px;
+      border-radius: 10px;
+      margin-bottom: 12px;
+      display: none;
+    }
+    .stale-banner.visible { display: block; }
+
+    /* Hero status card */
+    .status-card {
+      border-radius: 20px;
+      padding: 36px 24px;
+      text-align: center;
+      margin-bottom: 16px;
+      transition: background 0.3s, border-color 0.3s;
+    }
+    .status-card.ok {
+      background: #f0fdf4;
+      border: 2px solid #22c55e;
+    }
+    .status-card.no {
+      background: #fef2f2;
+      border: 2px solid #ef4444;
+    }
+    .status-card.loading {
+      background: #f9fafb;
+      border: 2px solid #e5e7eb;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    .status-card.stale {
+      background: #fef2f2;
+      border: 2px solid #ef4444;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    .status-icon { font-size: 60px; margin-bottom: 12px; display: block; }
+    .status-label {
+      font-size: 24px;
+      font-weight: 800;
+      color: #111827;
+      line-height: 1.2;
+      margin-bottom: 8px;
+    }
+    .status-reason {
+      font-size: 14px;
+      color: #6b7280;
+    }
+
+    /* Metrics grid */
+    .metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .metric {
+      background: white;
+      border-radius: 16px;
+      padding: 18px 14px;
+      text-align: center;
+      border: 1px solid #e5e7eb;
+    }
+    .metric.loading {
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    .metric-icon { font-size: 24px; margin-bottom: 6px; display: block; }
+    .metric-value {
+      font-size: 28px;
+      font-weight: 800;
+      color: #111827;
+      line-height: 1;
+    }
+    .metric-unit { font-size: 11px; color: #9ca3af; margin-top: 2px; }
+    .metric-label { font-size: 12px; color: #6b7280; margin-top: 6px; }
+
+    .metric-value.ok { color: #16a34a; }
+    .metric-value.warn { color: #d97706; }
+    .metric-value.bad { color: #dc2626; }
+
+    /* Pump row */
+    .pump-row {
+      background: white;
+      border-radius: 16px;
+      padding: 16px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      border: 1px solid #e5e7eb;
+    }
+    .pump-label { font-size: 14px; color: #374151; font-weight: 500; }
+    .pump-badge {
+      font-size: 12px;
+      font-weight: 700;
+      padding: 5px 12px;
+      border-radius: 20px;
+    }
+    .pump-badge.on { background: #dcfce7; color: #166534; }
+    .pump-badge.off { background: #fee2e2; color: #991b1b; }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      font-size: 11px;
+      color: #d1d5db;
+      padding-top: 8px;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <span class="header-title">🏊 Ma Piscine</span>
+    <span class="header-time" id="last-updated">—</span>
+  </div>
+
+  <div class="stale-banner" id="stale-banner">
+    ⚠️ Impossible de vérifier — données trop vieilles
+  </div>
+
+  <!-- Hero -->
+  <div class="status-card loading" id="status-card">
+    <span class="status-icon" id="status-icon">⏳</span>
+    <div class="status-label" id="status-label">Chargement…</div>
+    <div class="status-reason" id="status-reason"></div>
+  </div>
+
+  <!-- Metrics -->
+  <div class="metrics">
+    <div class="metric loading" id="metric-temp">
+      <span class="metric-icon">🌡️</span>
+      <div class="metric-value" id="temp-value">—</div>
+      <div class="metric-unit">°C</div>
+      <div class="metric-label">Température</div>
+    </div>
+    <div class="metric loading" id="metric-pump-power">
+      <span class="metric-icon">⚡</span>
+      <div class="metric-value" id="power-value">—</div>
+      <div class="metric-unit">Watts</div>
+      <div class="metric-label">Consommation</div>
+    </div>
+  </div>
+
+  <!-- Pump state row -->
+  <div class="pump-row">
+    <span class="pump-label">🔄 Pompe de filtration</span>
+    <span class="pump-badge off" id="pump-badge">—</span>
+  </div>
+
+  <div class="footer" id="footer">Source : Home Assistant</div>
+
+</div>
+
+<script>
+  const STALE_THRESHOLD_MS = 15 * 60 * 1000; // 15 minutes
+
+  function timeAgo(dateStr) {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return "à l'instant";
+    if (mins === 1) return "il y a 1 min";
+    if (mins < 60) return `il y a ${mins} min`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs === 1) return "il y a 1 h";
+    return `il y a ${hrs} h`;
+  }
+
+  function applyData(d) {
+    const updatedAt = d.updated_at ? new Date(d.updated_at) : null;
+    const isStale = !updatedAt || (Date.now() - updatedAt.getTime() > STALE_THRESHOLD_MS);
+
+    // Stale → force rouge + banner
+    if (isStale) {
+      document.getElementById('stale-banner').classList.add('visible');
+      const card = document.getElementById('status-card');
+      card.className = 'status-card stale';
+      document.getElementById('status-icon').textContent = '🔴';
+      document.getElementById('status-label').textContent = 'Impossible de vérifier';
+      document.getElementById('status-reason').textContent = 'Données trop vieilles — vérifier la connexion HA';
+    } else {
+      document.getElementById('stale-banner').classList.remove('visible');
+      const card = document.getElementById('status-card');
+      card.className = d.swimmable ? 'status-card ok' : 'status-card no';
+      document.getElementById('status-icon').textContent = d.swimmable ? '🟢' : '🔴';
+      // textContent only — jamais innerHTML (XSS prevention)
+      document.getElementById('status-label').textContent = d.swimmable ? 'Eau OK pour se baigner !' : 'Pas de baignade pour l\'instant';
+      document.getElementById('status-reason').textContent = d.reason || '';
+    }
+
+    // Température
+    const tempC = parseFloat(d.temp_water_c);
+    const tempEl = document.getElementById('temp-value');
+    if (!isNaN(tempC)) {
+      tempEl.textContent = tempC.toFixed(1);
+      tempEl.className = 'metric-value ' + (tempC >= 24 ? 'ok' : tempC >= 20 ? 'warn' : 'bad');
+    }
+    document.getElementById('metric-temp').classList.remove('loading');
+
+    // Puissance pompe
+    const powerW = parseFloat(d.pump_power_w);
+    const powerEl = document.getElementById('power-value');
+    if (!isNaN(powerW)) {
+      powerEl.textContent = powerW.toFixed(0);
+      powerEl.className = 'metric-value ' + (powerW > 0 ? 'ok' : '');
+    }
+    document.getElementById('metric-pump-power').classList.remove('loading');
+
+    // Badge pompe
+    const pumpBadge = document.getElementById('pump-badge');
+    pumpBadge.className = 'pump-badge ' + (d.pump_on ? 'on' : 'off');
+    pumpBadge.textContent = d.pump_on ? 'EN MARCHE' : 'À L\'ARRÊT';
+
+    // Timestamp
+    document.getElementById('last-updated').textContent = updatedAt ? timeAgo(d.updated_at) : 'Heure inconnue';
+  }
+
+  let lastGoodData = null;
+
+  async function fetchStatus() {
+    try {
+      const res = await fetch('status.json?ts=' + Date.now());
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json(); // peut throw SyntaxError si JSON corrompu
+      lastGoodData = data;
+      localStorage.setItem('lastStatus', JSON.stringify(data));
+      applyData(data);
+    } catch (e) {
+      // Fallback localStorage
+      const cached = localStorage.getItem('lastStatus');
+      if (cached) {
+        try {
+          applyData(JSON.parse(cached));
+        } catch (_) {
+          showError();
+        }
+      } else {
+        showError();
+      }
+    }
+  }
+
+  function showError() {
+    const card = document.getElementById('status-card');
+    card.className = 'status-card no';
+    document.getElementById('status-icon').textContent = '⚠️';
+    document.getElementById('status-label').textContent = 'Erreur de chargement';
+    document.getElementById('status-reason').textContent = 'Vérifier la connexion et réessayer';
+    document.getElementById('metric-temp').classList.remove('loading');
+    document.getElementById('metric-pump-power').classList.remove('loading');
+  }
+
+  // Initial load + refresh toutes les 5 min
+  fetchStatus();
+  setInterval(fetchStatus, 5 * 60 * 1000);
+</script>
+</body>
+</html>

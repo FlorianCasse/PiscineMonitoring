@@ -1,0 +1,30 @@
+name: Update Pool Status
+
+on:
+  repository_dispatch:
+    types: [update_pool_status]
+
+# Prevent race condition if HA dispatches twice in quick succession
+concurrency:
+  group: update-status
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Write status.json from HA payload
+        run: |
+          echo '${{ toJson(github.event.client_payload) }}' > status.json
+
+      - name: Commit and push
+        run: |
+          git config user.email "ha-pool-bot@piscine"
+          git config user.name "HA Pool Bot"
+          git add status.json
+          git diff --staged --quiet || git commit -m "chore: update pool status [skip ci]"
+          git push
