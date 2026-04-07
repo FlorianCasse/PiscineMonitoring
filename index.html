@@ -175,8 +175,25 @@
     .pump-badge.on { background: #dcfce7; color: #166534; }
     .pump-badge.off { background: #fee2e2; color: #991b1b; }
 
-    /* Sparkline */
-    .sparkline { display: block; margin: 6px auto 2px; overflow: visible; }
+    /* Trend card */
+    .trend-card {
+      background: white;
+      border-radius: 16px;
+      padding: 14px 16px 12px;
+      margin-bottom: 16px;
+      border: 1px solid #e5e7eb;
+      display: none;
+    }
+    .trend-card.visible { display: block; }
+    .trend-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 8px;
+    }
+    .trend-title { font-size: 13px; font-weight: 600; color: #374151; }
+    .trend-range { font-size: 11px; color: #9ca3af; }
+    .trend-card svg { width: 100%; height: 80px; display: block; overflow: visible; }
 
     /* Forecast card */
     .forecast-card {
@@ -228,7 +245,6 @@
       <span class="metric-icon">🌡️</span>
       <div class="metric-value" id="temp-value">—</div>
       <div class="metric-unit">°C</div>
-      <svg id="temp-sparkline" class="sparkline" width="80" height="30"></svg>
       <div class="metric-label">Température</div>
     </div>
     <div class="metric loading" id="metric-air-temp">
@@ -243,6 +259,15 @@
       <div class="metric-unit">Watts</div>
       <div class="metric-label">Pompe</div>
     </div>
+  </div>
+
+  <!-- Trend sparkline card -->
+  <div class="trend-card" id="trend-card">
+    <div class="trend-header">
+      <span class="trend-title">📈 Tendance · 24h</span>
+      <span class="trend-range" id="trend-range"></span>
+    </div>
+    <svg id="temp-sparkline" viewBox="0 0 360 80" preserveAspectRatio="none"></svg>
   </div>
 
   <!-- Forecast card -->
@@ -377,21 +402,71 @@
   let historyEntries = [];
 
   function renderSparkline(entries) {
+    const card = document.getElementById('trend-card');
     const svg = document.getElementById('temp-sparkline');
     if (!entries || entries.length < 2) return;
-    const window288 = entries.slice(-288);
-    const temps = window288.map(e => e.temp_water_c).filter(t => typeof t === 'number' && !isNaN(t));
+    const w288 = entries.slice(-288);
+    const temps = w288.map(e => e.temp_water_c).filter(t => typeof t === 'number' && !isNaN(t));
     if (temps.length < 2) return;
-    const min = Math.min(...temps);
-    const max = Math.max(...temps);
-    const W = 80, H = 30;
-    const step = W / (temps.length - 1);
-    const points = temps.map((t, i) => {
-      const x = (i * step).toFixed(1);
-      const y = (max === min ? 15 : H - (t - min) / (max - min) * H).toFixed(1);
-      return x + ',' + y;
-    }).join(' ');
-    svg.innerHTML = '<polyline points="' + points + '" fill="none" stroke="#3b82f6" stroke-width="1.5"/>';
+
+    const VW = 360, VH = 80;
+    const PL = 26, PR = 6, PT = 6, PB = 6;
+    const cW = VW - PL - PR, cH = VH - PT - PB;
+
+    const minT = Math.min(...temps), maxT = Math.max(...temps);
+    const lo = Math.max(0, minT - 0.8), hi = maxT + 0.8;
+    const span = hi - lo || 1;
+
+    const px = i => PL + (i / (temps.length - 1)) * cW;
+    const py = t => PT + (1 - (t - lo) / span) * cH;
+
+    const pts = temps.map((t, i) => px(i).toFixed(1) + ',' + py(t).toFixed(1)).join(' ');
+
+    const lastX = px(temps.length - 1), lastY = py(temps[temps.length - 1]);
+    const lastT = temps[temps.length - 1];
+    const dotColor = lastT >= 20 ? '#16a34a' : '#3b82f6';
+
+    // Area fill path
+    const areaD = 'M' + px(0).toFixed(1) + ',' + py(temps[0]).toFixed(1) +
+      temps.slice(1).map((t, i) => ' L' + px(i + 1).toFixed(1) + ',' + py(t).toFixed(1)).join('') +
+      ' L' + lastX.toFixed(1) + ',' + (PT + cH) + ' L' + PL + ',' + (PT + cH) + ' Z';
+
+    // 20°C swim threshold line
+    const y20 = py(20);
+    const show20 = y20 >= PT && y20 <= PT + cH;
+
+    // Y-axis labels: only show if they don't overlap (8px gap)
+    const yMax = py(maxT), yMin = py(minT);
+    const showMax = true;
+    const showMin = Math.abs(yMin - yMax) > 14;
+    const showMinUnder20 = show20 && Math.abs(yMin - y20) < 10;
+    const showMaxUnder20 = show20 && Math.abs(yMax - y20) < 10;
+
+    svg.innerHTML =
+      '<defs>' +
+        '<linearGradient id="aG" x1="0" y1="0" x2="0" y2="1">' +
+          '<stop offset="0%" stop-color="#3b82f6" stop-opacity="0.25"/>' +
+          '<stop offset="100%" stop-color="#3b82f6" stop-opacity="0.03"/>' +
+        '</linearGradient>' +
+      '</defs>' +
+      '<path d="' + areaD + '" fill="url(#aG)"/>' +
+      (show20 && !showMinUnder20 && !showMaxUnder20
+        ? '<line x1="' + PL + '" y1="' + y20.toFixed(1) + '" x2="' + (VW - PR) + '" y2="' + y20.toFixed(1) +
+          '" stroke="#22c55e" stroke-width="1" stroke-dasharray="4,3" opacity="0.7"/>' +
+          '<text x="' + (PL - 3) + '" y="' + (y20 + 3.5).toFixed(1) + '" fill="#16a34a" font-size="9" text-anchor="end">20°</text>'
+        : '') +
+      '<polyline points="' + pts + '" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>' +
+      (showMax
+        ? '<text x="' + (PL - 3) + '" y="' + (yMax + 3.5).toFixed(1) + '" fill="#94a3b8" font-size="9" text-anchor="end">' + maxT.toFixed(1) + '°</text>'
+        : '') +
+      (showMin
+        ? '<text x="' + (PL - 3) + '" y="' + (yMin + 3.5).toFixed(1) + '" fill="#94a3b8" font-size="9" text-anchor="end">' + minT.toFixed(1) + '°</text>'
+        : '') +
+      '<circle cx="' + lastX.toFixed(1) + '" cy="' + lastY.toFixed(1) + '" r="3.5" fill="' + dotColor + '" stroke="white" stroke-width="1.5"/>';
+
+    document.getElementById('trend-range').textContent =
+      'Min ' + minT.toFixed(1) + '° · Max ' + maxT.toFixed(1) + '°';
+    card.classList.add('visible');
   }
 
   function computeForecast(entries, currentTemp) {
