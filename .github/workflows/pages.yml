@@ -22,6 +22,10 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      - name: Inject service worker version
+        shell: bash
+        run: |
+          sed -i "s/SW_VERSION_PLACEHOLDER/${GITHUB_SHA::7}/g" sw.js
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
