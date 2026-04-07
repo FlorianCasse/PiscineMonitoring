@@ -1,9 +1,9 @@
 {
-  "swimmable": false,
-  "reason": "Pompe à l'arrêt — filtration requise",
-  "temp_water_c": 16.0,
-  "pump_on": false,
-  "pump_power_w": 0.0,
+  "pump_on": true,
+  "pump_power_w": 436.8,
+  "reason": "Eau trop froide (16.6C)",
   "sensors_ok": true,
-  "updated_at": "2026-04-07T12:00:00+02:00"
+  "swimmable": false,
+  "temp_water_c": 16.6,
+  "updated_at": "2026-04-07T14:21:33.537093+02:00"
 }
