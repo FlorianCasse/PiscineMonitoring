@@ -4,16 +4,21 @@ on:
   repository_dispatch:
     types: [update_pool_status]
 
-# Prevent race condition if HA dispatches twice in quick succession
 concurrency:
-  group: update-status
+  group: pages
   cancel-in-progress: false
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
-  update:
+  deploy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
 
@@ -23,10 +28,11 @@ jobs:
         run: |
           echo "$PAYLOAD" > status.json
 
-      - name: Commit and push
-        run: |
-          git config user.email "ha-pool-bot@piscine"
-          git config user.name "HA Pool Bot"
-          git add status.json
-          git diff --staged --quiet || git commit -m "chore: update pool status"
-          git push
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - uses: actions/deploy-pages@v4
+        id: deployment
