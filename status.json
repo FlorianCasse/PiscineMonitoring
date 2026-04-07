@@ -1,9 +1,9 @@
 {
   "pump_on": true,
-  "pump_power_w": 436.8,
+  "pump_power_w": 437.8,
   "reason": "Eau trop froide (16.6C)",
   "sensors_ok": true,
   "swimmable": false,
   "temp_water_c": 16.6,
-  "updated_at": "2026-04-07T14:21:33.537093+02:00"
+  "updated_at": "2026-04-07T14:22:51.628565+02:00"
 }
