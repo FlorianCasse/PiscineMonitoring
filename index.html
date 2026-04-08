@@ -264,7 +264,7 @@
   <!-- Trend sparkline card -->
   <div class="trend-card" id="trend-card">
     <div class="trend-header">
-      <span class="trend-title" id="trend-title">📈 Tendance · 24h</span>
+      <span class="trend-title" id="trend-title">📈 Tendance · 7j</span>
       <span class="trend-range" id="trend-range"></span>
     </div>
     <svg id="temp-sparkline" viewBox="0 0 360 80" preserveAspectRatio="none"></svg>
@@ -342,7 +342,7 @@
       v_meh_s:           'Ni vraiment BBQ ni vraiment piscine',
       v_cold_l:          'Patience…',
       v_cold_s:          'La belle saison arrive !',
-      trend_title:       '📈 Tendance · 24h',
+      trend_title:       '📈 Tendance · 7j',
       trend_range:       'Min {min}° · Max {max}°',
       fc_insufficient:   'Données insuffisantes',
       fc_stable:         'Stable',
@@ -393,7 +393,7 @@
       v_meh_s:           'Not really BBQ or pool weather',
       v_cold_l:          'Be patient…',
       v_cold_s:          'Summer is coming!',
-      trend_title:       '📈 Trend · 24h',
+      trend_title:       '📈 Trend · 7d',
       trend_range:       'Min {min}° · Max {max}°',
       fc_insufficient:   'Insufficient data',
       fc_stable:         'Stable',
@@ -527,7 +527,7 @@
     const card = document.getElementById('trend-card');
     const svg = document.getElementById('temp-sparkline');
     if (!entries || entries.length < 2) return;
-    const w288 = entries.slice(-288);
+    const w288 = entries.slice(-2016);
     const temps = w288.map(e => e.temp_water_c).filter(t => typeof t === 'number' && !isNaN(t));
     if (temps.length < 2) return;
 
