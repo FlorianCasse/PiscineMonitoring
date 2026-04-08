@@ -224,7 +224,7 @@
 <div class="container">
 
   <div class="header">
-    <span class="header-title">🏊 Ma Piscine</span>
+    <span class="header-title" id="header-title">🏊 Ma Piscine</span>
     <span class="header-time" id="last-updated">—</span>
   </div>
 
@@ -245,26 +245,26 @@
       <span class="metric-icon">🌡️</span>
       <div class="metric-value" id="temp-value">—</div>
       <div class="metric-unit">°C</div>
-      <div class="metric-label">Température</div>
+      <div class="metric-label" id="metric-label-temp">Température</div>
     </div>
     <div class="metric loading" id="metric-air-temp">
       <span class="metric-icon">🌤️</span>
       <div class="metric-value" id="air-temp-value">—</div>
       <div class="metric-unit">°C</div>
-      <div class="metric-label">Extérieur</div>
+      <div class="metric-label" id="metric-label-air">Extérieur</div>
     </div>
     <div class="metric loading" id="metric-pump-power">
       <span class="metric-icon">⚡</span>
       <div class="metric-value" id="power-value">—</div>
       <div class="metric-unit">Watts</div>
-      <div class="metric-label">Pompe</div>
+      <div class="metric-label" id="metric-label-pump">Pompe</div>
     </div>
   </div>
 
   <!-- Trend sparkline card -->
   <div class="trend-card" id="trend-card">
     <div class="trend-header">
-      <span class="trend-title">📈 Tendance · 24h</span>
+      <span class="trend-title" id="trend-title">📈 Tendance · 24h</span>
       <span class="trend-range" id="trend-range"></span>
     </div>
     <svg id="temp-sparkline" viewBox="0 0 360 80" preserveAspectRatio="none"></svg>
@@ -290,7 +290,7 @@
 
   <!-- Pump state row -->
   <div class="pump-row">
-    <span class="pump-label">🔄 Pompe de filtration</span>
+    <span class="pump-label" id="pump-label">🔄 Pompe de filtration</span>
     <span class="pump-badge off" id="pump-badge">—</span>
   </div>
 
@@ -299,71 +299,196 @@
 </div>
 
 <script>
-  const STALE_THRESHOLD_MS = 15 * 60 * 1000; // 15 minutes
+  // ── i18n ─────────────────────────────────────────────────────────────────
+  const lang = navigator.language.startsWith('fr') ? 'fr' : 'en';
+  document.documentElement.lang = lang;
+
+  const S = {
+    fr: {
+      page_title:        'Ma Piscine',
+      header_title:      '🏊 Ma Piscine',
+      stale_banner:      '⚠️ Impossible de vérifier — données trop vieilles',
+      status_loading:    'Chargement…',
+      status_analysis:   'Analyse en cours…',
+      status_stale:      'Impossible de vérifier',
+      status_stale_sub:  'Données trop vieilles — vérifier la connexion HA',
+      sensor_fail:       'Capteur indétectable',
+      sensor_fail_sub:   'Vérifier HA — capteur hors ligne',
+      status_ok:         'Eau OK pour se baigner !',
+      status_no:         'Pas de baignade pour l\'instant',
+      error_label:       'Erreur de chargement',
+      error_sub:         'Vérifier la connexion et réessayer',
+      label_water:       'Température',
+      label_air:         'Extérieur',
+      label_pump:        'Pompe',
+      pump_row:          '🔄 Pompe de filtration',
+      pump_on:           'EN MARCHE',
+      pump_off:          'À L\'ARRÊT',
+      time_now:          'à l\'instant',
+      time_min1:         'il y a 1 min',
+      time_mins:         'il y a {n} min',
+      time_h1:           'il y a 1 h',
+      time_hrs:          'il y a {n} h',
+      time_unknown:      'Heure inconnue',
+      verdict_no_air:    'Données ext. indisponibles',
+      v_perfect_l:       'Journée parfaite !',
+      v_perfect_s:       'BBQ + piscine — tout est réuni !',
+      v_bbq_l:           'Top pour un BBQ !',
+      v_bbq_s_soon:      'La piscine sera bientôt prête',
+      v_bbq_s_not:       'Piscine pas encore prête',
+      v_pool_l:          'Bonne baignade !',
+      v_pool_s:          'Il fait un peu frais dehors',
+      v_meh_l:           'Journée correcte',
+      v_meh_s:           'Ni vraiment BBQ ni vraiment piscine',
+      v_cold_l:          'Patience…',
+      v_cold_s:          'La belle saison arrive !',
+      trend_title:       '📈 Tendance · 24h',
+      trend_range:       'Min {min}° · Max {max}°',
+      fc_insufficient:   'Données insuffisantes',
+      fc_stable:         'Stable',
+      fc_stable_s:       '{t}°C — pas de tendance',
+      fc_cooling:        'Refroidit',
+      fc_cooling_s:      '{t}°C en baisse',
+      fc_not_today:      'Pas aujourd\'hui',
+      fc_not_today_s:    '{t}°C — chauffe trop lentement',
+      fc_ready:          'Prête vers {time}',
+      fc_ready_s:        '{t}°C — ça monte !',
+      footer:            'Source : Home Assistant',
+    },
+    en: {
+      page_title:        'My Pool',
+      header_title:      '🏊 My Pool',
+      stale_banner:      '⚠️ Cannot verify — data too old',
+      status_loading:    'Loading…',
+      status_analysis:   'Analysing…',
+      status_stale:      'Cannot verify',
+      status_stale_sub:  'Data too old — check HA connection',
+      sensor_fail:       'Sensor unavailable',
+      sensor_fail_sub:   'Check Home Assistant — sensor offline',
+      status_ok:         'Pool ready for swimming!',
+      status_no:         'Not ready for swimming yet',
+      error_label:       'Loading error',
+      error_sub:         'Check connection and try again',
+      label_water:       'Temperature',
+      label_air:         'Outdoor',
+      label_pump:        'Pump',
+      pump_row:          '🔄 Filter pump',
+      pump_on:           'RUNNING',
+      pump_off:          'OFF',
+      time_now:          'just now',
+      time_min1:         '1 min ago',
+      time_mins:         '{n} min ago',
+      time_h1:           '1 h ago',
+      time_hrs:          '{n} h ago',
+      time_unknown:      'Unknown time',
+      verdict_no_air:    'Outdoor data unavailable',
+      v_perfect_l:       'Perfect day!',
+      v_perfect_s:       'BBQ + pool — everything\'s set!',
+      v_bbq_l:           'Great BBQ weather!',
+      v_bbq_s_soon:      'Pool will be ready soon',
+      v_bbq_s_not:       'Pool not quite ready',
+      v_pool_l:          'Good swim!',
+      v_pool_s:          'A bit cool outside',
+      v_meh_l:           'Decent day',
+      v_meh_s:           'Not really BBQ or pool weather',
+      v_cold_l:          'Be patient…',
+      v_cold_s:          'Summer is coming!',
+      trend_title:       '📈 Trend · 24h',
+      trend_range:       'Min {min}° · Max {max}°',
+      fc_insufficient:   'Insufficient data',
+      fc_stable:         'Stable',
+      fc_stable_s:       '{t}°C — no trend',
+      fc_cooling:        'Cooling down',
+      fc_cooling_s:      '{t}°C — dropping',
+      fc_not_today:      'Not today',
+      fc_not_today_s:    '{t}°C — warming too slowly',
+      fc_ready:          'Ready around {time}',
+      fc_ready_s:        '{t}°C — warming up!',
+      footer:            'Source: Home Assistant',
+    }
+  };
+
+  function t(key, p) {
+    let s = (S[lang] || S.fr)[key] || key;
+    if (p) Object.entries(p).forEach(([k, v]) => { s = s.replace('{' + k + '}', v); });
+    return s;
+  }
+
+  function initUI() {
+    document.title = t('page_title');
+    document.getElementById('header-title').textContent   = t('header_title');
+    document.getElementById('stale-banner').textContent   = t('stale_banner');
+    document.getElementById('status-label').textContent   = t('status_loading');
+    document.getElementById('verdict-label').textContent  = t('status_analysis');
+    document.getElementById('metric-label-temp').textContent = t('label_water');
+    document.getElementById('metric-label-air').textContent  = t('label_air');
+    document.getElementById('metric-label-pump').textContent = t('label_pump');
+    document.getElementById('trend-title').textContent    = t('trend_title');
+    document.getElementById('pump-label').textContent     = t('pump_row');
+    document.getElementById('footer').textContent         = t('footer');
+  }
+
+  // ── Core ──────────────────────────────────────────────────────────────────
+  const STALE_THRESHOLD_MS = 15 * 60 * 1000;
 
   function computeVerdict(tempAir, tempWater, swimmable, pumpOn) {
-    if (isNaN(tempAir)) return { cls: 'meh', emoji: '🤔', label: 'Données ext. indisponibles', sub: '' };
-    const bbqOk = tempAir >= 22;
-    const poolSoon = pumpOn && tempWater >= 18;
-    if (bbqOk && swimmable)        return { cls: 'perfect', emoji: '🎉', label: 'Journée parfaite !',     sub: 'BBQ + piscine — tout est réuni !' };
-    if (bbqOk && poolSoon)         return { cls: 'bbq',     emoji: '🔥', label: 'Top pour un BBQ !',      sub: 'La piscine sera bientôt prête' };
-    if (bbqOk)                     return { cls: 'bbq',     emoji: '🔥', label: 'Top pour un BBQ !',      sub: 'Piscine pas encore prête' };
-    if (swimmable)                 return { cls: 'pool',    emoji: '🏊', label: 'Bonne baignade !',       sub: 'Il fait un peu frais dehors' };
-    if (tempAir >= 18)             return { cls: 'meh',     emoji: '⛅', label: 'Journée correcte',      sub: 'Ni vraiment BBQ ni vraiment piscine' };
-    return                                { cls: 'cold',    emoji: '❄️', label: 'Patience…',              sub: 'La belle saison arrive !' };
+    if (isNaN(tempAir)) return { cls: 'meh', emoji: '🤔', label: t('verdict_no_air'), sub: '' };
+    const bbqOk = tempAir >= 22, poolSoon = pumpOn && tempWater >= 18;
+    if (bbqOk && swimmable) return { cls: 'perfect', emoji: '🎉', label: t('v_perfect_l'), sub: t('v_perfect_s') };
+    if (bbqOk && poolSoon)  return { cls: 'bbq',     emoji: '🔥', label: t('v_bbq_l'),    sub: t('v_bbq_s_soon') };
+    if (bbqOk)              return { cls: 'bbq',     emoji: '🔥', label: t('v_bbq_l'),    sub: t('v_bbq_s_not') };
+    if (swimmable)          return { cls: 'pool',    emoji: '🏊', label: t('v_pool_l'),   sub: t('v_pool_s') };
+    if (tempAir >= 18)      return { cls: 'meh',     emoji: '⛅', label: t('v_meh_l'),    sub: t('v_meh_s') };
+    return                         { cls: 'cold',    emoji: '❄️', label: t('v_cold_l'),   sub: t('v_cold_s') };
   }
 
   function timeAgo(dateStr) {
     const diff = Date.now() - new Date(dateStr).getTime();
     const mins = Math.floor(diff / 60000);
-    if (mins < 1) return "à l'instant";
-    if (mins === 1) return "il y a 1 min";
-    if (mins < 60) return `il y a ${mins} min`;
+    if (mins < 1)  return t('time_now');
+    if (mins === 1) return t('time_min1');
+    if (mins < 60) return t('time_mins', { n: mins });
     const hrs = Math.floor(mins / 60);
-    if (hrs === 1) return "il y a 1 h";
-    return `il y a ${hrs} h`;
+    if (hrs === 1) return t('time_h1');
+    return t('time_hrs', { n: hrs });
   }
 
   function applyData(d) {
     const updatedAt = d.updated_at ? new Date(d.updated_at) : null;
     const isStale = !updatedAt || (Date.now() - updatedAt.getTime() > STALE_THRESHOLD_MS);
 
-    // Stale → force rouge + banner
     if (isStale) {
       document.getElementById('stale-banner').classList.add('visible');
       const card = document.getElementById('status-card');
       card.className = 'status-card stale';
-      document.getElementById('status-icon').textContent = '🔴';
-      document.getElementById('status-label').textContent = 'Impossible de vérifier';
-      document.getElementById('status-reason').textContent = 'Données trop vieilles — vérifier la connexion HA';
+      document.getElementById('status-icon').textContent  = '🔴';
+      document.getElementById('status-label').textContent = t('status_stale');
+      document.getElementById('status-reason').textContent = t('status_stale_sub');
     } else {
       document.getElementById('stale-banner').classList.remove('visible');
       const card = document.getElementById('status-card');
       if (d.sensors_ok === false) {
         card.className = 'status-card sensors_fail';
-        document.getElementById('status-icon').textContent = '⚠️';
-        document.getElementById('status-label').textContent = 'Capteur indétectable';
-        document.getElementById('status-reason').textContent = 'Vérifier HA — capteur hors ligne';
+        document.getElementById('status-icon').textContent  = '⚠️';
+        document.getElementById('status-label').textContent = t('sensor_fail');
+        document.getElementById('status-reason').textContent = t('sensor_fail_sub');
       } else {
         card.className = d.swimmable ? 'status-card ok' : 'status-card no';
-        document.getElementById('status-icon').textContent = d.swimmable ? '🟢' : '🔴';
-        // textContent only — jamais innerHTML (XSS prevention)
-        document.getElementById('status-label').textContent = d.swimmable ? 'Eau OK pour se baigner !' : 'Pas de baignade pour l\'instant';
-        document.getElementById('status-reason').textContent = d.reason || '';
+        document.getElementById('status-icon').textContent  = d.swimmable ? '🟢' : '🔴';
+        document.getElementById('status-label').textContent = t(d.swimmable ? 'status_ok' : 'status_no');
+        document.getElementById('status-reason').textContent = '';
       }
     }
 
-    // Température
     const tempC = parseFloat(d.temp_water_c);
     const tempEl = document.getElementById('temp-value');
     if (!isNaN(tempC)) {
-      tempEl.textContent = tempC.toFixed(1);
+      tempEl.textContent  = tempC.toFixed(1);
       tempEl.className = 'metric-value ' + (tempC >= 24 ? 'ok' : tempC >= 20 ? 'warn' : 'bad');
     }
     document.getElementById('metric-temp').classList.remove('loading');
     if (!isNaN(tempC)) renderForecast(tempC);
 
-    // Température extérieure
     const tempAir = parseFloat(d.temp_air_c);
     const airEl = document.getElementById('air-temp-value');
     if (!isNaN(tempAir)) {
@@ -372,15 +497,13 @@
     }
     document.getElementById('metric-air-temp').classList.remove('loading');
 
-    // Verdict BBQ + Piscine
     const verdict = computeVerdict(tempAir, tempC, d.swimmable, d.pump_on);
     const vCard = document.getElementById('verdict-card');
     vCard.className = 'verdict-card ' + verdict.cls;
     document.getElementById('verdict-emoji').textContent = verdict.emoji;
     document.getElementById('verdict-label').textContent = verdict.label;
-    document.getElementById('verdict-sub').textContent = verdict.sub;
+    document.getElementById('verdict-sub').textContent   = verdict.sub;
 
-    // Puissance pompe
     const powerW = parseFloat(d.pump_power_w);
     const powerEl = document.getElementById('power-value');
     if (!isNaN(powerW)) {
@@ -389,13 +512,12 @@
     }
     document.getElementById('metric-pump-power').classList.remove('loading');
 
-    // Badge pompe
     const pumpBadge = document.getElementById('pump-badge');
-    pumpBadge.className = 'pump-badge ' + (d.pump_on ? 'on' : 'off');
-    pumpBadge.textContent = d.pump_on ? 'EN MARCHE' : 'À L\'ARRÊT';
+    pumpBadge.className   = 'pump-badge ' + (d.pump_on ? 'on' : 'off');
+    pumpBadge.textContent = t(d.pump_on ? 'pump_on' : 'pump_off');
 
-    // Timestamp
-    document.getElementById('last-updated').textContent = updatedAt ? timeAgo(d.updated_at) : 'Heure inconnue';
+    document.getElementById('last-updated').textContent =
+      updatedAt ? timeAgo(d.updated_at) : t('time_unknown');
   }
 
   let lastGoodData = null;
@@ -465,27 +587,36 @@
       '<circle cx="' + lastX.toFixed(1) + '" cy="' + lastY.toFixed(1) + '" r="3.5" fill="' + dotColor + '" stroke="white" stroke-width="1.5"/>';
 
     document.getElementById('trend-range').textContent =
-      'Min ' + minT.toFixed(1) + '° · Max ' + maxT.toFixed(1) + '°';
+      t('trend_range', { min: minT.toFixed(1), max: maxT.toFixed(1) });
     card.classList.add('visible');
   }
 
   function computeForecast(entries, currentTemp) {
     if (currentTemp >= 20) return null;
-    if (!entries || entries.length < 12) return { text: 'Données insuffisantes', sub: '' };
+    const tc = currentTemp.toFixed(1);
+    if (!entries || entries.length < 12) return { text: t('fc_insufficient'), sub: '' };
     const w = entries.slice(-12);
     const first = w[0], last = w[w.length - 1];
     const dtMs = new Date(last.ts) - new Date(first.ts);
-    if (dtMs <= 0) return { text: 'Données insuffisantes', sub: '' };
+    if (dtMs <= 0) return { text: t('fc_insufficient'), sub: '' };
     const slope = (last.temp_water_c - first.temp_water_c) / dtMs;
     const THRESHOLD = 0.01 / 3600000;
-    if (Math.abs(slope) < THRESHOLD) return { text: 'Stable', sub: currentTemp.toFixed(1) + '°C — pas de tendance' };
-    if (slope < -THRESHOLD) return { text: 'Refroidit', sub: currentTemp.toFixed(1) + '°C en baisse' };
+    if (Math.abs(slope) < THRESHOLD) return { text: t('fc_stable'), sub: t('fc_stable_s', { t: tc }) };
+    if (slope < -THRESHOLD) return { text: t('fc_cooling'), sub: t('fc_cooling_s', { t: tc }) };
     const etaMs = (20 - currentTemp) / slope;
-    if (etaMs > 24 * 3600000) return { text: "Pas aujourd'hui", sub: currentTemp.toFixed(1) + '°C — chauffe trop lentement' };
+    if (etaMs > 24 * 3600000) return { text: t('fc_not_today'), sub: t('fc_not_today_s', { t: tc }) };
     const eta = new Date(Date.now() + etaMs);
     const h = eta.getHours(), m = eta.getMinutes();
-    const timeStr = m < 15 ? h + 'h' : m < 45 ? h + 'h30' : ((h + 1) % 24) + 'h';
-    return { text: 'Prête vers ' + timeStr, sub: currentTemp.toFixed(1) + '°C — ça monte !' };
+    let timeStr;
+    if (lang === 'fr') {
+      timeStr = m < 15 ? h + 'h' : m < 45 ? h + 'h30' : ((h + 1) % 24) + 'h';
+    } else {
+      const bH = m < 45 ? h : (h + 1) % 24;
+      const h12 = bH % 12 || 12;
+      const ampm = bH < 12 ? 'AM' : 'PM';
+      timeStr = m < 15 ? h12 + ' ' + ampm : m < 45 ? h12 + ':30 ' + ampm : h12 + ' ' + ampm;
+    }
+    return { text: t('fc_ready', { time: timeStr }), sub: t('fc_ready_s', { t: tc }) };
   }
 
   function renderForecast(tempC) {
@@ -536,14 +667,15 @@
     const card = document.getElementById('status-card');
     card.className = 'status-card no';
     document.getElementById('status-icon').textContent = '⚠️';
-    document.getElementById('status-label').textContent = 'Erreur de chargement';
-    document.getElementById('status-reason').textContent = 'Vérifier la connexion et réessayer';
+    document.getElementById('status-label').textContent = t('error_label');
+    document.getElementById('status-reason').textContent = t('error_sub');
     document.getElementById('metric-temp').classList.remove('loading');
     document.getElementById('metric-air-temp').classList.remove('loading');
     document.getElementById('metric-pump-power').classList.remove('loading');
   }
 
   // Initial load + refresh toutes les 5 min
+  initUI();
   fetchStatus();
   fetchHistory();
   setInterval(fetchStatus, 5 * 60 * 1000);
