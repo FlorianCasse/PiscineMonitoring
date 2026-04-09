@@ -487,7 +487,7 @@
       tempEl.className = 'metric-value ' + (tempC >= 24 ? 'ok' : tempC >= 20 ? 'warn' : 'bad');
     }
     document.getElementById('metric-temp').classList.remove('loading');
-    if (!isNaN(tempC)) renderForecast(tempC);
+    if (!isNaN(tempC)) { lastKnownTempC = tempC; renderForecast(tempC); }
 
     const tempAir = parseFloat(d.temp_air_c);
     const airEl = document.getElementById('air-temp-value');
@@ -522,6 +522,7 @@
 
   let lastGoodData = null;
   let historyEntries = [];
+  let lastKnownTempC = null;
 
   function renderSparkline(entries) {
     const card = document.getElementById('trend-card');
@@ -635,6 +636,7 @@
       const data = await res.json();
       historyEntries = data.entries || [];
       renderSparkline(historyEntries);
+      if (lastKnownTempC !== null) renderForecast(lastKnownTempC);
     } catch (e) {
       // history unavailable — sparkline and forecast stay hidden
     }
