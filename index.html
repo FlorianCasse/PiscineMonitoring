@@ -240,6 +240,224 @@
       color: #d1d5db;
       padding-top: 8px;
     }
+
+    /* ── Tab navigation ───────────────────────────────────────────────────── */
+    .tab-bar {
+      display: flex;
+      gap: 4px;
+      background: white;
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    .tab-btn {
+      flex: 1;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 4px;
+      border-radius: 8px;
+      color: #9ca3af;
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-family: inherit;
+    }
+    .tab-btn.active { background: #3b82f6; color: white; }
+
+    .sub-tab-bar {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 12px;
+    }
+    .sub-tab-btn {
+      flex: 1;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 4px;
+      border-radius: 8px;
+      color: #9ca3af;
+      cursor: pointer;
+      background: white;
+      border: 1px solid #e5e7eb;
+      font-family: inherit;
+    }
+    .sub-tab-btn.active { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+
+    /* ── Season stats cards ───────────────────────────────────────────────── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .stat {
+      background: white;
+      border-radius: 12px;
+      padding: 14px 10px;
+      text-align: center;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    .stat-value { font-size: 36px; font-weight: 800; line-height: 1; color: #1d4ed8; }
+    .stat-unit  { font-size: 11px; color: #9ca3af; margin-top: 2px; }
+    .stat-label { font-size: 12px; color: #6b7280; margin-top: 4px; }
+    .stat.swim .stat-value       { color: #059669; }
+    .stat.solar-stat .stat-value { color: #d97706; }
+
+    /* ── Season bests ─────────────────────────────────────────────────────── */
+    .season-bests {
+      background: white;
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    .best-item {
+      font-size: 13px;
+      color: #374151;
+      padding: 4px 0;
+      display: flex;
+      justify-content: space-between;
+    }
+    .best-value { font-weight: 700; color: #111827; }
+
+    /* ── Heatmap ──────────────────────────────────────────────────────────── */
+    #swim-heatmap {
+      background: white;
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    .heatmap-title { font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 8px; }
+    .heatmap-grid  { display: flex; gap: 3px; flex-wrap: wrap; }
+    .heatmap-cell  { width: 14px; height: 14px; border-radius: 2px; background: #e5e7eb; }
+    .heatmap-cell.swim-lo  { background: #86efac; }
+    .heatmap-cell.swim-mid { background: #4ade80; }
+    .heatmap-cell.swim-hi  { background: #16a34a; }
+
+    /* ── Historical chart cards ───────────────────────────────────────────── */
+    .hist-card {
+      background: white;
+      border-radius: 16px;
+      padding: 14px 16px 12px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    .hist-card-header { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 8px; }
+    .hist-card-sub    { font-size: 11px; color: #9ca3af; font-style: italic; margin-bottom: 6px; }
+    .hist-svg         { width: 100%; display: block; overflow: visible; }
+
+    /* ── Period pills ─────────────────────────────────────────────────────── */
+    .period-pills { display: flex; gap: 6px; margin-bottom: 4px; }
+    .period-pill {
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      border: 1px solid #e5e7eb;
+      color: #6b7280;
+      cursor: pointer;
+      background: none;
+      font-family: inherit;
+    }
+    .period-pill.active { background: #3b82f6; color: white; border-color: #3b82f6; }
+    .period-available-label { font-size: 10px; color: #9ca3af; margin-bottom: 6px; min-height: 14px; }
+
+    /* ── Energy section ───────────────────────────────────────────────────── */
+    .energie-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 10px;
+    }
+    .settings-open-btn { background: none; border: none; font-size: 20px; cursor: pointer; padding: 2px 4px; }
+    .energy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+    .energy-item { background: white; border-radius: 12px; padding: 12px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+    .energy-value { font-size: 24px; font-weight: 800; color: #059669; line-height: 1; }
+    .energy-unit  { font-size: 11px; color: #9ca3af; margin-top: 2px; }
+    .energy-label { font-size: 11px; color: #6b7280; margin-top: 4px; }
+    .meteo-row { font-size: 14px; color: #374151; padding: 6px 0; }
+    .meteo-row.highlight { font-weight: 700; font-size: 16px; color: #1d4ed8; }
+    .meteo-message { font-size: 13px; color: #9ca3af; font-style: italic; padding: 8px 0; }
+
+    /* ── Empty states ─────────────────────────────────────────────────────── */
+    .hist-empty-a {
+      background: white;
+      border-radius: 16px;
+      padding: 24px 16px;
+      text-align: center;
+      font-size: 14px;
+      color: #6b7280;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      margin-bottom: 12px;
+    }
+    .hist-empty-b { text-align: center; font-size: 12px; color: #9ca3af; padding: 10px 0; font-style: italic; }
+
+    /* ── Settings drawer ──────────────────────────────────────────────────── */
+    .settings-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      z-index: 100;
+    }
+    .settings-backdrop.open { display: block; }
+    .settings-drawer {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%) translateY(100%);
+      width: 100%;
+      max-width: 480px;
+      background: white;
+      border-radius: 20px 20px 0 0;
+      padding: 20px 20px 40px;
+      z-index: 101;
+      transition: transform 0.25s ease;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+    }
+    .settings-drawer.open { transform: translateX(-50%) translateY(0); }
+    .settings-drawer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 15px;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 20px;
+    }
+    .settings-close {
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      color: #6b7280;
+      padding: 2px 8px;
+    }
+    .settings-field { margin-bottom: 16px; }
+    .settings-field label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 6px;
+    }
+    .settings-field input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      font-size: 15px;
+      color: #111827;
+      box-sizing: border-box;
+      font-family: inherit;
+    }
+    .settings-field input:focus { outline: none; border-color: #3b82f6; }
   </style>
 </head>
 <body>
@@ -250,92 +468,190 @@
     <span class="header-time" id="last-updated">—</span>
   </div>
 
-  <div class="stale-banner" id="stale-banner">
-    ⚠️ Impossible de vérifier — données trop vieilles
+  <div class="stale-banner" id="stale-banner">⚠️ Impossible de vérifier — données trop vieilles</div>
+
+  <!-- Tab bar -->
+  <div class="tab-bar">
+    <button class="tab-btn active" data-tab="aujourdhui" id="tab-btn-aujourdhui">Aujourd'hui</button>
+    <button class="tab-btn" data-tab="7jours" id="tab-btn-7jours">7 jours</button>
+    <button class="tab-btn" data-tab="historique" id="tab-btn-historique">Historique</button>
   </div>
 
-  <!-- Hero -->
-  <div class="status-card loading" id="status-card">
-    <span class="status-icon" id="status-icon">⏳</span>
-    <div class="status-label" id="status-label">Chargement…</div>
-    <div class="status-reason" id="status-reason"></div>
-    <div class="status-trigger" id="status-trigger"></div>
-  </div>
+  <!-- ── Tab: Aujourd'hui ─────────────────────────────────────────────────── -->
+  <div id="tab-aujourdhui" class="tab-panel">
 
-  <!-- Metrics -->
-  <div class="metrics">
-    <div class="metric loading" id="metric-temp">
-      <span class="metric-icon">🌡️</span>
-      <div class="metric-value" id="temp-value">—</div>
-      <div class="metric-unit">°C</div>
-      <div class="metric-label" id="metric-label-temp">Température</div>
+    <div class="status-card loading" id="status-card">
+      <span class="status-icon" id="status-icon">⏳</span>
+      <div class="status-label" id="status-label">Chargement…</div>
+      <div class="status-reason" id="status-reason"></div>
+      <div class="status-trigger" id="status-trigger"></div>
     </div>
-    <div class="metric loading" id="metric-air-temp">
-      <span class="metric-icon">🌤️</span>
-      <div class="metric-value" id="air-temp-value">—</div>
-      <div class="metric-unit">°C</div>
-      <div class="metric-label" id="metric-label-air">Extérieur</div>
-    </div>
-    <div class="metric loading" id="metric-pump-power">
-      <span class="metric-icon">⚡</span>
-      <div class="metric-value" id="power-value">—</div>
-      <div class="metric-unit">Watts</div>
-      <div class="metric-label" id="metric-label-pump">Pompe</div>
-    </div>
-  </div>
 
-  <!-- Solar production card -->
-  <div class="solar-card" id="solar-card">
-    <div class="solar-header" id="solar-header">☀️ Solaire</div>
-    <div class="solar-metrics">
-      <div class="solar-metric">
-        <div class="solar-value" id="solar-power-value">—</div>
-        <div class="solar-unit" id="solar-power-unit">W</div>
-        <div class="solar-label" id="solar-power-label">Puissance</div>
+    <div class="metrics">
+      <div class="metric loading" id="metric-temp">
+        <span class="metric-icon">🌡️</span>
+        <div class="metric-value" id="temp-value">—</div>
+        <div class="metric-unit">°C</div>
+        <div class="metric-label" id="metric-label-temp">Température</div>
       </div>
-      <div class="solar-metric">
-        <div class="solar-value" id="solar-today-value">—</div>
-        <div class="solar-unit">kWh</div>
-        <div class="solar-label" id="solar-today-label">Aujourd'hui</div>
+      <div class="metric loading" id="metric-air-temp">
+        <span class="metric-icon">🌤️</span>
+        <div class="metric-value" id="air-temp-value">—</div>
+        <div class="metric-unit">°C</div>
+        <div class="metric-label" id="metric-label-air">Extérieur</div>
+      </div>
+      <div class="metric loading" id="metric-pump-power">
+        <span class="metric-icon">⚡</span>
+        <div class="metric-value" id="power-value">—</div>
+        <div class="metric-unit">Watts</div>
+        <div class="metric-label" id="metric-label-pump">Pompe</div>
       </div>
     </div>
-  </div>
 
-  <!-- Trend sparkline card -->
-  <div class="trend-card" id="trend-card">
-    <div class="trend-header">
-      <span class="trend-title" id="trend-title">📈 Tendance · 7j</span>
-      <span class="trend-range" id="trend-range"></span>
+    <div class="solar-card" id="solar-card">
+      <div class="solar-header" id="solar-header">☀️ Solaire</div>
+      <div class="solar-metrics">
+        <div class="solar-metric">
+          <div class="solar-value" id="solar-power-value">—</div>
+          <div class="solar-unit" id="solar-power-unit">W</div>
+          <div class="solar-label" id="solar-power-label">Puissance</div>
+        </div>
+        <div class="solar-metric">
+          <div class="solar-value" id="solar-today-value">—</div>
+          <div class="solar-unit">kWh</div>
+          <div class="solar-label" id="solar-today-label">Aujourd'hui</div>
+        </div>
+      </div>
     </div>
-    <svg id="temp-sparkline" viewBox="0 0 360 80" preserveAspectRatio="none"></svg>
-  </div>
 
-  <!-- Forecast card -->
-  <div class="forecast-card" id="forecast-card">
-    <span class="forecast-icon">🔮</span>
-    <div>
-      <div class="forecast-label" id="forecast-label">—</div>
-      <div class="forecast-sub" id="forecast-sub"></div>
+    <div class="verdict-card" id="verdict-card">
+      <span class="verdict-emoji" id="verdict-emoji">⏳</span>
+      <div>
+        <div class="verdict-label" id="verdict-label">Analyse en cours…</div>
+        <div class="verdict-sub" id="verdict-sub"></div>
+      </div>
     </div>
-  </div>
 
-  <!-- Verdict BBQ + Piscine -->
-  <div class="verdict-card" id="verdict-card">
-    <span class="verdict-emoji" id="verdict-emoji">⏳</span>
-    <div>
-      <div class="verdict-label" id="verdict-label">Analyse en cours…</div>
-      <div class="verdict-sub" id="verdict-sub"></div>
+    <div class="pump-row">
+      <span class="pump-label" id="pump-label">🔄 Pompe de filtration</span>
+      <span class="pump-badge off" id="pump-badge">—</span>
     </div>
-  </div>
 
-  <!-- Pump state row -->
-  <div class="pump-row">
-    <span class="pump-label" id="pump-label">🔄 Pompe de filtration</span>
-    <span class="pump-badge off" id="pump-badge">—</span>
-  </div>
+  </div><!-- /#tab-aujourdhui -->
+
+  <!-- ── Tab: 7 jours ─────────────────────────────────────────────────────── -->
+  <div id="tab-7jours" class="tab-panel" style="display:none">
+
+    <div class="trend-card" id="trend-card">
+      <div class="trend-header">
+        <span class="trend-title" id="trend-title">📈 Tendance · 7j</span>
+        <span class="trend-range" id="trend-range"></span>
+      </div>
+      <svg id="temp-sparkline" viewBox="0 0 360 80" preserveAspectRatio="none"></svg>
+    </div>
+
+    <div class="forecast-card" id="forecast-card">
+      <span class="forecast-icon">🔮</span>
+      <div>
+        <div class="forecast-label" id="forecast-label">—</div>
+        <div class="forecast-sub" id="forecast-sub"></div>
+      </div>
+    </div>
+
+  </div><!-- /#tab-7jours -->
+
+  <!-- ── Tab: Historique ──────────────────────────────────────────────────── -->
+  <div id="tab-historique" class="tab-panel" style="display:none">
+
+    <div class="sub-tab-bar">
+      <button class="sub-tab-btn active" data-sub="saison" id="sub-btn-saison">Saison</button>
+      <button class="sub-tab-btn" data-sub="charts" id="sub-btn-charts">Charts</button>
+      <button class="sub-tab-btn" data-sub="energie" id="sub-btn-energie">Énergie</button>
+    </div>
+
+    <!-- Sub-tab: Saison -->
+    <div id="subtab-saison" class="sub-tab-panel">
+      <div class="stats-row">
+        <div class="stat swim">
+          <div class="stat-value" id="stat-swim-days">—</div>
+          <div class="stat-unit" id="stat-swim-unit">jours</div>
+          <div class="stat-label" id="stat-swim-label">🏊 Baignade cette saison</div>
+        </div>
+        <div class="stat solar-stat">
+          <div class="stat-value" id="stat-solar-kwh">—</div>
+          <div class="stat-unit">kWh</div>
+          <div class="stat-label" id="stat-solar-kwh-label">☀️ Production solaire</div>
+        </div>
+      </div>
+      <div id="season-bests" class="season-bests" style="display:none"></div>
+      <div id="swim-heatmap"></div>
+    </div>
+
+    <!-- Sub-tab: Charts -->
+    <div id="subtab-charts" class="sub-tab-panel" style="display:none">
+      <div class="hist-card">
+        <div class="hist-card-header" id="temp-chart-title">🌡️ Température eau</div>
+        <div class="period-pills" id="temp-chart-pills"></div>
+        <div class="period-available-label" id="temp-chart-available"></div>
+        <svg id="temp-chart-svg" class="hist-svg" viewBox="0 0 360 120" height="120" preserveAspectRatio="none"></svg>
+        <div class="hist-empty-b" id="temp-chart-empty" style="display:none"></div>
+      </div>
+      <div class="hist-card">
+        <div class="hist-card-header" id="solar-chart-title">☀️ Production solaire</div>
+        <div class="period-pills" id="solar-chart-pills"></div>
+        <div class="period-available-label" id="solar-chart-available"></div>
+        <svg id="solar-chart-svg" class="hist-svg" viewBox="0 0 360 80" height="80" preserveAspectRatio="none"></svg>
+        <div class="hist-empty-b" id="solar-chart-empty" style="display:none"></div>
+      </div>
+      <div class="hist-card">
+        <div class="hist-card-header" id="corr-title">📊 Corrélation air / eau</div>
+        <div class="hist-card-sub" id="corr-disclaimer"></div>
+        <svg id="corr-svg" class="hist-svg" viewBox="0 0 300 140" height="140" preserveAspectRatio="none"></svg>
+        <div class="hist-empty-b" id="corr-empty" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- Sub-tab: Énergie -->
+    <div id="subtab-energie" class="sub-tab-panel" style="display:none">
+      <div class="energie-header">
+        <span id="energie-title">💰 Énergie</span>
+        <button class="settings-open-btn" id="settings-open-btn">⚙️</button>
+      </div>
+      <div class="energy-grid" id="energy-grid"></div>
+      <div class="hist-card" id="meteo-forecast-card">
+        <div class="hist-card-header" id="meteo-forecast-title">🌤️ Prévision demain</div>
+        <div id="meteo-forecast-content"></div>
+      </div>
+    </div>
+
+    <!-- Empty state A: daily_summary.json not yet available -->
+    <div class="hist-empty-a" id="hist-empty-a" style="display:none"></div>
+
+  </div><!-- /#tab-historique -->
 
   <div class="footer" id="footer">Source : Home Assistant</div>
 
+</div><!-- /.container -->
+
+<!-- Settings drawer (outside container for correct z-index stacking) -->
+<div class="settings-backdrop" id="settings-backdrop"></div>
+<div class="settings-drawer" id="settings-drawer">
+  <div class="settings-drawer-header">
+    <span id="settings-title">⚙️ Paramètres</span>
+    <button class="settings-close" id="settings-close">✕</button>
+  </div>
+  <div class="settings-field">
+    <label id="settings-tariff-label">Tarif (€/kWh)</label>
+    <input id="settings-tariff" type="number" step="0.01" min="0" placeholder="e.g. 0.22">
+  </div>
+  <div class="settings-field">
+    <label id="settings-lat-label">Latitude</label>
+    <input id="settings-lat" type="number" step="0.0001" placeholder="e.g. 48.8566">
+  </div>
+  <div class="settings-field">
+    <label id="settings-lon-label">Longitude</label>
+    <input id="settings-lon" type="number" step="0.0001" placeholder="e.g. 2.3522">
+  </div>
 </div>
 
 <script>
@@ -398,6 +714,41 @@
       solar_power_label: 'Puissance',
       solar_today_label: 'Aujourd\'hui',
       footer:            'Source : Home Assistant',
+      tab_aujourdhui:    'Aujourd\'hui',
+      tab_7jours:        '7 jours',
+      tab_historique:    'Historique',
+      sub_saison:        'Saison',
+      sub_charts:        'Charts',
+      sub_energie:       'Énergie',
+      stat_swim_label:   '🏊 Baignade cette saison',
+      stat_solar_label:  '☀️ Production solaire',
+      stat_swim_unit:    'jours',
+      best_water:        'Record eau',
+      best_solar:        'Record solaire',
+      heatmap_title:     '🗓️ Calendrier',
+      hist_temp_title:   '🌡️ Température eau',
+      hist_solar_title:  '☀️ Production solaire',
+      hist_corr_title:   '📊 Corrélation air / eau',
+      hist_corr_sub:     'À titre indicatif — corrélation historique',
+      period_7j:         '7j',
+      period_30j:        '30j',
+      period_90j:        '90j',
+      period_available:  '{n} jours disponibles',
+      hist_empty_a:      'Données historiques disponibles à partir de demain.',
+      hist_empty_b:      'Aucune donnée pour cette période. Essayez 90j ou vérifiez votre capteur HA.',
+      fc_meteo_coords:   'Configurez vos coordonnées dans les paramètres',
+      fc_meteo_api:      'Prévision indisponible (API, dernière : {h}h)',
+      fc_meteo_data:     'Données insuffisantes ({n}/7 jours requis)',
+      fc_meteo_tmr:      'Demain : {air}°C air → ~{water}°C piscine',
+      energie_title:     '💰 Énergie',
+      energy_savings_lbl:'Économies aujourd\'hui',
+      energy_season_lbl: 'Économies saison',
+      energy_pump_lbl:   'Coût pompe saison',
+      settings_title:    '⚙️ Paramètres',
+      settings_tariff:   'Tarif (€/kWh)',
+      settings_lat:      'Latitude',
+      settings_lon:      'Longitude',
+      meteo_title:       '🌤️ Prévision demain',
     },
     en: {
       page_title:        'My Pool',
@@ -453,6 +804,41 @@
       solar_power_label: 'Power',
       solar_today_label: 'Today',
       footer:            'Source: Home Assistant',
+      tab_aujourdhui:    'Today',
+      tab_7jours:        '7 days',
+      tab_historique:    'History',
+      sub_saison:        'Season',
+      sub_charts:        'Charts',
+      sub_energie:       'Energy',
+      stat_swim_label:   '🏊 Swim days this season',
+      stat_solar_label:  '☀️ Solar production',
+      stat_swim_unit:    'days',
+      best_water:        'Water record',
+      best_solar:        'Solar record',
+      heatmap_title:     '🗓️ Calendar',
+      hist_temp_title:   '🌡️ Water temperature',
+      hist_solar_title:  '☀️ Solar production',
+      hist_corr_title:   '📊 Air / water correlation',
+      hist_corr_sub:     'For reference only — historical correlation',
+      period_7j:         '7d',
+      period_30j:        '30d',
+      period_90j:        '90d',
+      period_available:  '{n} days available',
+      hist_empty_a:      'Historical data will be available from tomorrow.',
+      hist_empty_b:      'No data for this period. Try 90d or check your HA sensor.',
+      fc_meteo_coords:   'Configure your coordinates in settings',
+      fc_meteo_api:      'Forecast unavailable (API, last: {h}h ago)',
+      fc_meteo_data:     'Insufficient data ({n}/7 days required)',
+      fc_meteo_tmr:      'Tomorrow: {air}°C air → ~{water}°C pool',
+      energie_title:     '💰 Energy',
+      energy_savings_lbl:"Today's savings",
+      energy_season_lbl: 'Season savings',
+      energy_pump_lbl:   'Pump cost (season)',
+      settings_title:    '⚙️ Settings',
+      settings_tariff:   'Tariff (€/kWh)',
+      settings_lat:      'Latitude',
+      settings_lon:      'Longitude',
+      meteo_title:       '🌤️ Tomorrow\'s forecast',
     }
   };
 
@@ -462,21 +848,70 @@
     return s;
   }
 
+  // ============================================================
+  // PiscineMonitoring — data sources + localStorage keys
+  // ============================================================
+  // Data files:
+  //   status.json        — live pool state (overwritten every dispatch, not committed)
+  //   history.json       — rolling 7-day window, 2016 entries, 5-min cadence
+  //   daily_summary.json — one entry/day, grows ~20KB/year
+  //
+  // localStorage keys:
+  //   lastStatus         — cached status.json for offline fallback
+  //   piscine_tab        — active top-level tab (aujourdhui / 7jours / historique)
+  //   piscine_sub_tab    — active Historique sub-tab (saison / charts / energie)
+  //   piscine_tariff     — energy tariff in €/kWh (default: 0.22)
+  //   piscine_lat        — pool latitude in decimal degrees (e.g. 48.8566)
+  //   piscine_lon        — pool longitude in decimal degrees (e.g. 2.3522)
+  //   openmeteo_forecast — cached Open-Meteo response JSON + cached_at timestamp
+  // ============================================================
+
+  // Safe localStorage wrappers — prevent QuotaExceededError in Safari Private Mode
+  function safeGet(key, fallback = null) {
+    try { return localStorage.getItem(key) ?? fallback; } catch (_) { return fallback; }
+  }
+  function safeSet(key, value) {
+    try { localStorage.setItem(key, value); } catch (_) {}
+  }
+
   function initUI() {
     document.title = t('page_title');
-    document.getElementById('header-title').textContent   = t('header_title');
-    document.getElementById('stale-banner').textContent   = t('stale_banner');
-    document.getElementById('status-label').textContent   = t('status_loading');
-    document.getElementById('verdict-label').textContent  = t('status_analysis');
+    document.getElementById('header-title').textContent      = t('header_title');
+    document.getElementById('stale-banner').textContent      = t('stale_banner');
+    document.getElementById('status-label').textContent      = t('status_loading');
+    document.getElementById('verdict-label').textContent     = t('status_analysis');
     document.getElementById('metric-label-temp').textContent = t('label_water');
     document.getElementById('metric-label-air').textContent  = t('label_air');
     document.getElementById('metric-label-pump').textContent = t('label_pump');
-    document.getElementById('trend-title').textContent    = t('trend_title');
+    document.getElementById('trend-title').textContent       = t('trend_title');
     document.getElementById('pump-label').textContent        = t('pump_row');
     document.getElementById('solar-header').textContent      = t('solar_header');
     document.getElementById('solar-power-label').textContent = t('solar_power_label');
     document.getElementById('solar-today-label').textContent = t('solar_today_label');
     document.getElementById('footer').textContent            = t('footer');
+    // Tabs
+    document.getElementById('tab-btn-aujourdhui').textContent  = t('tab_aujourdhui');
+    document.getElementById('tab-btn-7jours').textContent      = t('tab_7jours');
+    document.getElementById('tab-btn-historique').textContent  = t('tab_historique');
+    document.getElementById('sub-btn-saison').textContent      = t('sub_saison');
+    document.getElementById('sub-btn-charts').textContent      = t('sub_charts');
+    document.getElementById('sub-btn-energie').textContent     = t('sub_energie');
+    // Historique labels
+    document.getElementById('stat-swim-unit').textContent      = t('stat_swim_unit');
+    document.getElementById('stat-swim-label').textContent     = t('stat_swim_label');
+    document.getElementById('stat-solar-kwh-label').textContent= t('stat_solar_label');
+    document.getElementById('temp-chart-title').textContent    = t('hist_temp_title');
+    document.getElementById('solar-chart-title').textContent   = t('hist_solar_title');
+    document.getElementById('corr-title').textContent          = t('hist_corr_title');
+    document.getElementById('corr-disclaimer').textContent     = t('hist_corr_sub');
+    document.getElementById('energie-title').textContent       = t('energie_title');
+    document.getElementById('meteo-forecast-title').textContent= t('meteo_title');
+    document.getElementById('hist-empty-a').textContent        = t('hist_empty_a');
+    // Settings drawer labels
+    document.getElementById('settings-title').textContent      = t('settings_title');
+    document.getElementById('settings-tariff-label').textContent = t('settings_tariff');
+    document.getElementById('settings-lat-label').textContent  = t('settings_lat');
+    document.getElementById('settings-lon-label').textContent  = t('settings_lon');
   }
 
   // ── Core ──────────────────────────────────────────────────────────────────
@@ -553,7 +988,7 @@
       tempEl.className = 'metric-value ' + (tempC >= 24 ? 'ok' : tempC >= 20 ? 'warn' : 'bad');
     }
     document.getElementById('metric-temp').classList.remove('loading');
-    if (!isNaN(tempC)) { lastKnownTempC = tempC; renderForecast(tempC); }
+    if (!isNaN(tempC)) { lastKnownTempC = tempC; renderTrendForecast(tempC); }
 
     const tempAir = parseFloat(d.temp_air_c);
     const airEl = document.getElementById('air-temp-value');
@@ -621,16 +1056,16 @@
 
     const lastX = px(temps.length - 1), lastY = py(temps[temps.length - 1]);
     const lastT = temps[temps.length - 1];
-    const dotColor = lastT >= 20 ? '#16a34a' : '#3b82f6';
+    const dotColor = lastT >= SWIM_TEMP_C ? '#16a34a' : '#3b82f6';
 
     // Area fill path
     const areaD = 'M' + px(0).toFixed(1) + ',' + py(temps[0]).toFixed(1) +
       temps.slice(1).map((t, i) => ' L' + px(i + 1).toFixed(1) + ',' + py(t).toFixed(1)).join('') +
       ' L' + lastX.toFixed(1) + ',' + (PT + cH) + ' L' + PL + ',' + (PT + cH) + ' Z';
 
-    // 20°C swim threshold line
-    const y20 = py(20);
-    const show20 = y20 >= PT && y20 <= PT + cH;
+    // Swim threshold line
+    const y20 = py(SWIM_TEMP_C);
+    const show20 = y20 >= PT && y20 <= PT + cH; // threshold line visibility
 
     // Y-axis labels: only show if they don't overlap (8px gap)
     const yMax = py(maxT), yMin = py(minT);
@@ -666,20 +1101,32 @@
     card.classList.add('visible');
   }
 
+  // Shared slope helper — used by computeForecast() and renderMeteoForecast()
+  // Returns { slope (°C/ms), lastTemp, dtMs, valid }
+  // NaN guard: filters entries with invalid or missing timestamps
+  function computeWaterTempSlope(entries) {
+    if (!entries || entries.length < 2) return { slope: 0, lastTemp: null, dtMs: 0, valid: false };
+    const window = entries.slice(-12);
+    const valid = window.filter(e => e.ts && !isNaN(new Date(e.ts).getTime()) && e.temp_water_c != null);
+    if (valid.length < 2) return { slope: 0, lastTemp: null, dtMs: 0, valid: false };
+    const first = valid[0], last = valid[valid.length - 1];
+    const dtMs = new Date(last.ts) - new Date(first.ts);
+    if (dtMs <= 0) return { slope: 0, lastTemp: last.temp_water_c, dtMs: 0, valid: false };
+    return { slope: (last.temp_water_c - first.temp_water_c) / dtMs, lastTemp: last.temp_water_c, dtMs, valid: true };
+  }
+
+  // Data source: history.json entries (5-min cadence), currentTemp from live status.json
   function computeForecast(entries, currentTemp) {
-    if (currentTemp >= 20) return null;
+    if (currentTemp >= SWIM_TEMP_C) return null;
     const tc = currentTemp.toFixed(1);
     if (!entries || entries.length < 12) return { text: t('fc_insufficient'), sub: '' };
-    const w = entries.slice(-12);
-    const first = w[0], last = w[w.length - 1];
-    const dtMs = new Date(last.ts) - new Date(first.ts);
-    if (dtMs <= 0) return { text: t('fc_insufficient'), sub: '' };
-    const slope = (last.temp_water_c - first.temp_water_c) / dtMs;
+    const { slope, valid } = computeWaterTempSlope(entries);
+    if (!valid) return { text: t('fc_insufficient'), sub: '' };
     const THRESHOLD = 0.01 / 3600000;
-    if (Math.abs(slope) < THRESHOLD) return { text: t('fc_stable'), sub: t('fc_stable_s', { t: tc }) };
-    if (slope < -THRESHOLD) return { text: t('fc_cooling'), sub: t('fc_cooling_s', { t: tc }) };
-    const etaMs = (20 - currentTemp) / slope;
-    if (etaMs > 24 * 3600000) return { text: t('fc_not_today'), sub: t('fc_not_today_s', { t: tc }) };
+    if (Math.abs(slope) < THRESHOLD) return { text: t('fc_stable'),   sub: t('fc_stable_s',   { t: tc }) };
+    if (slope < -THRESHOLD)          return { text: t('fc_cooling'),  sub: t('fc_cooling_s',  { t: tc }) };
+    const etaMs = (SWIM_TEMP_C - currentTemp) / slope;
+    if (etaMs > 24 * 3600000)        return { text: t('fc_not_today'), sub: t('fc_not_today_s', { t: tc }) };
     const eta = new Date(Date.now() + etaMs);
     const h = eta.getHours(), m = eta.getMinutes();
     let timeStr;
@@ -694,13 +1141,14 @@
     return { text: t('fc_ready', { time: timeStr }), sub: t('fc_ready_s', { t: tc }) };
   }
 
-  function renderForecast(tempC) {
+  // Data source: history.json (trend-based, short-term extrapolation)
+  function renderTrendForecast(tempC) {
     const forecast = computeForecast(historyEntries, tempC);
     const card = document.getElementById('forecast-card');
     if (!forecast) { card.classList.remove('visible'); return; }
     card.classList.add('visible');
     document.getElementById('forecast-label').textContent = forecast.text;
-    document.getElementById('forecast-sub').textContent = forecast.sub;
+    document.getElementById('forecast-sub').textContent   = forecast.sub;
   }
 
   function renderSolar(powerW, totalKwh) {
@@ -742,7 +1190,7 @@
       const data = await res.json();
       historyEntries = data.entries || [];
       renderSparkline(historyEntries);
-      if (lastKnownTempC !== null) renderForecast(lastKnownTempC);
+      if (lastKnownTempC !== null) renderTrendForecast(lastKnownTempC);
       if (lastSolarData) renderSolar(lastSolarData.powerW, lastSolarData.totalKwh);
     } catch (e) {
       // history unavailable — sparkline and forecast stay hidden
@@ -755,11 +1203,11 @@
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json(); // peut throw SyntaxError si JSON corrompu
       lastGoodData = data;
-      localStorage.setItem('lastStatus', JSON.stringify(data));
+      safeSet('lastStatus', JSON.stringify(data));
       applyData(data);
     } catch (e) {
       // Fallback localStorage
-      const cached = localStorage.getItem('lastStatus');
+      const cached = safeGet('lastStatus');
       if (cached) {
         try {
           applyData(JSON.parse(cached));
@@ -784,12 +1232,438 @@
     document.getElementById('metric-pump-power').classList.remove('loading');
   }
 
+  // ── Tab navigation ─────────────────────────────────────────────────────────
+  let currentTab    = safeGet('piscine_tab',     'aujourdhui');
+  let currentSubTab = safeGet('piscine_sub_tab', 'saison');
+
+  function showTab(name) {
+    ['aujourdhui', '7jours', 'historique'].forEach(n => {
+      const panel = document.getElementById('tab-' + n);
+      const btn   = document.getElementById('tab-btn-' + n);
+      if (panel) panel.style.display = n === name ? '' : 'none';
+      if (btn)   btn.classList.toggle('active', n === name);
+    });
+    currentTab = name;
+    safeSet('piscine_tab', name);
+    if (name === 'historique' && dailySummaryEntries.length > 0) renderHistorique();
+  }
+
+  function showSubTab(name) {
+    ['saison', 'charts', 'energie'].forEach(n => {
+      const panel = document.getElementById('subtab-' + n);
+      const btn   = document.getElementById('sub-btn-' + n);
+      if (panel) panel.style.display = n === name ? '' : 'none';
+      if (btn)   btn.classList.toggle('active', n === name);
+    });
+    currentSubTab = name;
+    safeSet('piscine_sub_tab', name);
+  }
+
+  function initTabs() {
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => showTab(btn.dataset.tab));
+    });
+    document.querySelectorAll('.sub-tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => showSubTab(btn.dataset.sub));
+    });
+    // Restore persisted state
+    showTab(currentTab);
+    showSubTab(currentSubTab);
+  }
+
+  // ── daily_summary.json ──────────────────────────────────────────────────────
+  let dailySummaryEntries = [];
+  let dailySummarySeasonStart = null;
+  let tempChartDays  = 30;
+  let solarChartDays = 30;
+  let lastRegression = null; // computed by renderCorrelation(), used by renderMeteoForecast()
+
+  async function fetchDailySummary() {
+    try {
+      const res = await fetch('daily_summary.json?ts=' + Date.now());
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      dailySummaryEntries     = data.entries || [];
+      dailySummarySeasonStart = data.season_start || null;
+      if (currentTab === 'historique') renderHistorique();
+    } catch (_) {
+      // daily_summary.json not yet available — State A empty state is shown on tab open
+    }
+  }
+
+  function renderHistorique() {
+    const entries = dailySummaryEntries;
+    const emptyA  = document.getElementById('hist-empty-a');
+    const subBars = document.querySelector('.sub-tab-bar');
+
+    if (!entries || entries.length === 0) {
+      emptyA.style.display  = '';
+      subBars.style.display = 'none';
+      ['saison','charts','energie'].forEach(n => {
+        const p = document.getElementById('subtab-' + n);
+        if (p) p.style.display = 'none';
+      });
+      return;
+    }
+
+    emptyA.style.display  = 'none';
+    subBars.style.display = '';
+    showSubTab(currentSubTab);
+
+    renderSeasonStats(entries);
+    renderSeasonBests(entries);
+    renderSwimHeatmap(entries);
+    renderTempChart(entries, tempChartDays);
+    renderSolarChart(entries, solarChartDays);
+    const reg = renderCorrelation(entries);
+    lastRegression = reg;
+    renderEnergyCost(entries);
+    renderMeteoForecast(reg);
+  }
+
+  // ── renderSeasonStats() ───────────────────────────────────────────────────
+  function renderSeasonStats(entries) {
+    const start = dailySummarySeasonStart;
+    const seasonal = start ? entries.filter(e => e.date >= start) : entries;
+    const swimDays  = seasonal.filter(e => (e.swimmable_minutes || 0) > 0).length;
+    const solarKwh  = seasonal.reduce((s, e) => s + (e.solar_kwh_today || 0), 0);
+    document.getElementById('stat-swim-days').textContent = swimDays;
+    document.getElementById('stat-solar-kwh').textContent = solarKwh >= 10
+      ? Math.round(solarKwh) : solarKwh.toFixed(1);
+  }
+
+  // ── renderSeasonBests() ───────────────────────────────────────────────────
+  function renderSeasonBests(entries) {
+    const el = document.getElementById('season-bests');
+    const withWater  = entries.filter(e => e.max_water_c != null);
+    const withSolar  = entries.filter(e => e.solar_kwh_today != null);
+    if (!withWater.length && !withSolar.length) { el.style.display = 'none'; return; }
+    el.style.display = '';
+    const bestWater  = withWater.length  ? withWater.reduce((b, e)  => e.max_water_c  > b.max_water_c  ? e : b) : null;
+    const bestSolar  = withSolar.length  ? withSolar.reduce((b, e)  => e.solar_kwh_today > b.solar_kwh_today ? e : b) : null;
+    const fmt = d => new Date(d + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+    let html = '';
+    if (bestWater) html += '<div class="best-item"><span>' + t('best_water') + '</span><span class="best-value">' + bestWater.max_water_c.toFixed(1) + '°C · ' + fmt(bestWater.date) + '</span></div>';
+    if (bestSolar) html += '<div class="best-item"><span>' + t('best_solar') + '</span><span class="best-value">' + bestSolar.solar_kwh_today.toFixed(1) + ' kWh · ' + fmt(bestSolar.date) + '</span></div>';
+    el.innerHTML = html;
+  }
+
+  // ── renderSwimHeatmap() ───────────────────────────────────────────────────
+  function renderSwimHeatmap(entries) {
+    const el = document.getElementById('swim-heatmap');
+    if (!entries.length) { el.innerHTML = ''; return; }
+    const byDate = {};
+    entries.forEach(e => { byDate[e.date] = e.swimmable_minutes || 0; });
+    const start = dailySummarySeasonStart || entries[0].date;
+    const startD = new Date(start + 'T12:00:00'), endD = new Date();
+    let cells = '';
+    for (let d = new Date(startD); d <= endD; d.setDate(d.getDate() + 1)) {
+      const key = d.toISOString().slice(0, 10);
+      const mins = byDate[key] || 0;
+      const cls  = mins === 0 ? '' : mins < 60 ? ' swim-lo' : mins < 240 ? ' swim-mid' : ' swim-hi';
+      cells += '<div class="heatmap-cell' + cls + '" title="' + key + (mins ? ' · ' + mins + 'min' : '') + '"></div>';
+    }
+    el.innerHTML = '<div class="heatmap-title">' + t('heatmap_title') + '</div><div class="heatmap-grid">' + cells + '</div>';
+  }
+
+  // ── Period pills helper ───────────────────────────────────────────────────
+  function renderPills(containerId, activeDays, onPick) {
+    const pillDays = [7, 30, 90];
+    const keys     = ['period_7j', 'period_30j', 'period_90j'];
+    const el = document.getElementById(containerId);
+    el.innerHTML = '';
+    pillDays.forEach((d, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'period-pill' + (d === activeDays ? ' active' : '');
+      btn.textContent = t(keys[i]);
+      btn.onclick = () => onPick(d);
+      el.appendChild(btn);
+    });
+  }
+
+  function periodLabel(containerId, available, requested) {
+    const el = document.getElementById(containerId);
+    el.textContent = available < requested ? t('period_available', { n: available }) : '';
+  }
+
+  function filterPeriod(entries, days) {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - days);
+    const cut = cutoff.toISOString().slice(0, 10);
+    return entries.filter(e => e.date >= cut);
+  }
+
+  // ── renderTempChart() ─────────────────────────────────────────────────────
+  function renderTempChart(entries, days) {
+    const svg   = document.getElementById('temp-chart-svg');
+    const empty = document.getElementById('temp-chart-empty');
+    renderPills('temp-chart-pills', days, d => { tempChartDays = d; renderTempChart(dailySummaryEntries, d); });
+    const slice = filterPeriod(entries, days);
+    const valid = slice.filter(e => e.avg_water_c != null);
+    periodLabel('temp-chart-available', valid.length, days);
+    if (valid.length < 2) {
+      svg.innerHTML = ''; empty.style.display = ''; empty.textContent = t('hist_empty_b'); return;
+    }
+    empty.style.display = 'none';
+
+    const VW = 360, VH = 120, PL = 28, PR = 6, PT = 8, PB = 16;
+    const cW = VW - PL - PR, cH = VH - PT - PB;
+    const temps = valid.map(e => e.avg_water_c);
+    const minT = Math.min(...temps), maxT = Math.max(...temps);
+    const lo = Math.max(0, minT - 1), hi = maxT + 1, span = hi - lo || 1;
+    const n   = valid.length;
+    const px  = i => PL + (i / (n - 1)) * cW;
+    const py  = v => PT + (1 - (v - lo) / span) * cH;
+
+    // Swim threshold line
+    const yt   = py(SWIM_TEMP_C);
+    const showT = yt >= PT && yt <= PT + cH;
+
+    const pts = valid.map((e, i) => px(i).toFixed(1) + ',' + py(e.avg_water_c).toFixed(1)).join(' ');
+    const areaD = 'M' + px(0).toFixed(1) + ',' + py(valid[0].avg_water_c).toFixed(1)
+      + valid.slice(1).map((e, i) => ' L' + px(i + 1).toFixed(1) + ',' + py(e.avg_water_c).toFixed(1)).join('')
+      + ' L' + px(n - 1).toFixed(1) + ',' + (PT + cH) + ' L' + PL + ',' + (PT + cH) + ' Z';
+
+    // X-axis labels
+    const fmtDate = d => { const p = d.split('-'); return p[2] + '/' + p[1]; };
+    const xLabels = '<text x="' + PL + '" y="' + (VH - 2) + '" font-size="8" fill="#9ca3af">' + fmtDate(valid[0].date) + '</text>'
+      + '<text x="' + (VW - PR) + '" y="' + (VH - 2) + '" font-size="8" fill="#9ca3af" text-anchor="end">' + fmtDate(valid[n - 1].date) + '</text>';
+
+    svg.innerHTML =
+      '<defs><linearGradient id="tcG" x1="0" y1="0" x2="0" y2="1">'
+      + '<stop offset="0%" stop-color="#3b82f6" stop-opacity="0.2"/>'
+      + '<stop offset="100%" stop-color="#3b82f6" stop-opacity="0.02"/>'
+      + '</linearGradient></defs>'
+      + '<path d="' + areaD + '" fill="url(#tcG)"/>'
+      + (showT ? '<line x1="' + PL + '" y1="' + yt.toFixed(1) + '" x2="' + (VW - PR) + '" y2="' + yt.toFixed(1) + '" stroke="#22c55e" stroke-width="1" stroke-dasharray="4,3" opacity="0.7"/>'
+        + '<text x="' + (PL - 2) + '" y="' + (yt + 3.5).toFixed(1) + '" fill="#16a34a" font-size="8" text-anchor="end">' + SWIM_TEMP_C + '°</text>' : '')
+      + '<polyline points="' + pts + '" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linejoin="round"/>'
+      + '<text x="' + (PL - 2) + '" y="' + (py(maxT) + 3.5).toFixed(1) + '" fill="#94a3b8" font-size="8" text-anchor="end">' + maxT.toFixed(0) + '°</text>'
+      + '<text x="' + (PL - 2) + '" y="' + (py(minT) + 3.5).toFixed(1) + '" fill="#94a3b8" font-size="8" text-anchor="end">' + minT.toFixed(0) + '°</text>'
+      + xLabels;
+  }
+
+  // ── renderSolarChart() ────────────────────────────────────────────────────
+  function renderSolarChart(entries, days) {
+    const svg   = document.getElementById('solar-chart-svg');
+    const empty = document.getElementById('solar-chart-empty');
+    renderPills('solar-chart-pills', days, d => { solarChartDays = d; renderSolarChart(dailySummaryEntries, d); });
+    const slice = filterPeriod(entries, days);
+    const valid = slice.filter(e => e.solar_kwh_today != null && e.solar_kwh_today > 0);
+    periodLabel('solar-chart-available', slice.length, days);
+    if (valid.length === 0) {
+      svg.innerHTML = ''; empty.style.display = ''; empty.textContent = t('hist_empty_b'); return;
+    }
+    empty.style.display = 'none';
+
+    const VW = 360, VH = 80, PT = 4, PB = 12;
+    const maxK = Math.max(...valid.map(e => e.solar_kwh_today));
+    const barW  = Math.max(1, Math.floor((VW / slice.length) * 0.7));
+    const gap   = VW / slice.length;
+
+    let bars = '', xLabels = '';
+    slice.forEach((e, i) => {
+      if (!e.solar_kwh_today) return;
+      const h = ((e.solar_kwh_today / maxK) * (VH - PT - PB));
+      const x = i * gap + (gap - barW) / 2;
+      bars += '<rect x="' + x.toFixed(1) + '" y="' + (VH - PB - h).toFixed(1) + '" width="' + barW + '" height="' + h.toFixed(1) + '" fill="#d97706" rx="2"/>';
+    });
+    const fmtDate = d => { const p = d.split('-'); return p[2] + '/' + p[1]; };
+    xLabels = '<text x="0" y="' + VH + '" font-size="7" fill="#9ca3af">' + fmtDate(slice[0].date) + '</text>'
+      + '<text x="' + VW + '" y="' + VH + '" font-size="7" fill="#9ca3af" text-anchor="end">' + fmtDate(slice[slice.length - 1].date) + '</text>';
+    svg.innerHTML = bars + xLabels;
+  }
+
+  // ── renderCorrelation() ───────────────────────────────────────────────────
+  // Returns regression object { slope, intercept, n } or null
+  function renderCorrelation(entries) {
+    const svg   = document.getElementById('corr-svg');
+    const empty = document.getElementById('corr-empty');
+    const last30 = filterPeriod(entries, 30);
+    const valid  = last30.filter(e => e.avg_air_c != null && e.avg_water_c != null);
+
+    if (valid.length < 7) {
+      svg.innerHTML = ''; empty.style.display = '';
+      empty.textContent = t('fc_meteo_data', { n: valid.length }); return null;
+    }
+
+    // Variance guard — zero variance = stuck sensor, degenerate regression
+    const airVals  = valid.map(e => e.avg_air_c);
+    const meanAir  = airVals.reduce((a, b) => a + b, 0) / airVals.length;
+    const variance = airVals.reduce((s, v) => s + (v - meanAir) ** 2, 0) / airVals.length;
+    if (variance === 0) {
+      svg.innerHTML = ''; empty.style.display = '';
+      empty.textContent = t('fc_meteo_data', { n: valid.length }); return null;
+    }
+
+    empty.style.display = 'none';
+
+    // Linear regression (air → water)
+    const waterVals = valid.map(e => e.avg_water_c);
+    const meanWater = waterVals.reduce((a, b) => a + b, 0) / waterVals.length;
+    const num = valid.reduce((s, e) => s + (e.avg_air_c - meanAir) * (e.avg_water_c - meanWater), 0);
+    const den = airVals.reduce((s, v) => s + (v - meanAir) ** 2, 0);
+    const slope = num / den, intercept = meanWater - slope * meanAir;
+
+    // SVG
+    const VW = 300, VH = 140, PL = 30, PR = 8, PT = 8, PB = 24;
+    const cW = VW - PL - PR, cH = VH - PT - PB;
+    const minAir = Math.min(...airVals) - 2, maxAir = Math.max(...airVals) + 2;
+    const minWtr = Math.min(...waterVals) - 2, maxWtr = Math.max(...waterVals) + 2;
+    const px = v => PL + (v - minAir) / (maxAir - minAir) * cW;
+    const py = v => PT + (1 - (v - minWtr) / (maxWtr - minWtr)) * cH;
+
+    // Trendline endpoints
+    const ty1 = slope * minAir + intercept, ty2 = slope * maxAir + intercept;
+    const dots = valid.map(e =>
+      '<circle cx="' + px(e.avg_air_c).toFixed(1) + '" cy="' + py(e.avg_water_c).toFixed(1) + '" r="3" fill="#64748b" opacity="0.6"/>'
+    ).join('');
+
+    svg.innerHTML =
+      '<line x1="' + PL + '" y1="' + PT + '" x2="' + PL + '" y2="' + (PT + cH) + '" stroke="#e5e7eb" stroke-width="1"/>'
+      + '<line x1="' + PL + '" y1="' + (PT + cH) + '" x2="' + (VW - PR) + '" y2="' + (PT + cH) + '" stroke="#e5e7eb" stroke-width="1"/>'
+      + '<line x1="' + px(minAir).toFixed(1) + '" y1="' + py(ty1).toFixed(1) + '" x2="' + px(maxAir).toFixed(1) + '" y2="' + py(ty2).toFixed(1) + '" stroke="#3b82f6" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>'
+      + dots
+      + '<text x="' + (VW / 2) + '" y="' + (VH - 4) + '" font-size="8" fill="#9ca3af" text-anchor="middle">Air (°C)</text>'
+      + '<text x="' + PL + '" y="' + (PT + cH + 12) + '" font-size="7" fill="#9ca3af">' + Math.round(minAir + 2) + '°</text>'
+      + '<text x="' + (VW - PR) + '" y="' + (PT + cH + 12) + '" font-size="7" fill="#9ca3af" text-anchor="end">' + Math.round(maxAir - 2) + '°</text>'
+      + '<text x="' + (PL - 3) + '" y="' + (PT + 3) + '" font-size="7" fill="#9ca3af" text-anchor="end">' + Math.round(maxWtr - 2) + '°</text>'
+      + '<text x="' + (PL - 3) + '" y="' + (PT + cH) + '" font-size="7" fill="#9ca3af" text-anchor="end">' + Math.round(minWtr + 2) + '°</text>';
+
+    return { slope, intercept, n: valid.length };
+  }
+
+  // ── renderEnergyCost() ────────────────────────────────────────────────────
+  function renderEnergyCost(entries) {
+    const tariff  = parseFloat(safeGet('piscine_tariff', '0.22')) || 0.22;
+    const PUMP_KW = 0.75;
+    const start   = dailySummarySeasonStart;
+    const seasonal = start ? entries.filter(e => e.date >= start) : entries;
+
+    const todayStr   = new Date().toISOString().slice(0, 10);
+    const todayEntry = entries.find(e => e.date === todayStr);
+    const todaySavings = todayEntry && todayEntry.solar_kwh_today
+      ? (todayEntry.solar_kwh_today * tariff).toFixed(2) : null;
+
+    const seasonSolar = seasonal.reduce((s, e) => s + (e.solar_kwh_today || 0), 0);
+    const seasonSavings = (seasonSolar * tariff).toFixed(2);
+    const pumpHours  = seasonal.reduce((s, e) => s + (e.pump_on_minutes || 0), 0) / 60;
+    const pumpCost   = (pumpHours * PUMP_KW * tariff).toFixed(2);
+
+    const items = [
+      { value: todaySavings !== null ? todaySavings + ' €' : '—', label: t('energy_savings_lbl') },
+      { value: seasonSavings + ' €', label: t('energy_season_lbl') },
+      { value: pumpCost + ' €', label: t('energy_pump_lbl') },
+    ];
+    document.getElementById('energy-grid').innerHTML = items.map(item =>
+      '<div class="energy-item"><div class="energy-value">' + item.value + '</div><div class="energy-label">' + item.label + '</div></div>'
+    ).join('');
+  }
+
+  // ── Settings drawer ───────────────────────────────────────────────────────
+  function initSettingsDrawer() {
+    // Restore saved values
+    const tariff = safeGet('piscine_tariff', '');
+    const lat    = safeGet('piscine_lat',    '');
+    const lon    = safeGet('piscine_lon',    '');
+    if (tariff) document.getElementById('settings-tariff').value = tariff;
+    if (lat)    document.getElementById('settings-lat').value    = lat;
+    if (lon)    document.getElementById('settings-lon').value    = lon;
+
+    // Save on change + re-render affected views
+    let debounce;
+    ['settings-tariff', 'settings-lat', 'settings-lon'].forEach(id => {
+      document.getElementById(id).addEventListener('input', () => {
+        clearTimeout(debounce);
+        debounce = setTimeout(() => {
+          safeSet('piscine_tariff', document.getElementById('settings-tariff').value);
+          safeSet('piscine_lat',    document.getElementById('settings-lat').value);
+          safeSet('piscine_lon',    document.getElementById('settings-lon').value);
+          if (dailySummaryEntries.length > 0) {
+            renderEnergyCost(dailySummaryEntries);
+            renderMeteoForecast(lastRegression);
+          }
+        }, 400);
+      });
+    });
+
+    document.getElementById('settings-open-btn').addEventListener('click', openSettings);
+    document.getElementById('settings-close').addEventListener('click', closeSettings);
+    document.getElementById('settings-backdrop').addEventListener('click', closeSettings);
+  }
+
+  function openSettings() {
+    document.getElementById('settings-drawer').classList.add('open');
+    document.getElementById('settings-backdrop').classList.add('open');
+  }
+  function closeSettings() {
+    document.getElementById('settings-drawer').classList.remove('open');
+    document.getElementById('settings-backdrop').classList.remove('open');
+  }
+
+  // ── renderMeteoForecast() ─────────────────────────────────────────────────
+  // Data source: Open-Meteo API + air→water regression from renderCorrelation()
+  const OPENMETEO_CACHE_MS = 6 * 60 * 60 * 1000; // 6 hours
+
+  async function renderMeteoForecast(regression) {
+    const el = document.getElementById('meteo-forecast-content');
+
+    // State 1: coords not configured
+    const lat = parseFloat(safeGet('piscine_lat', ''));
+    const lon = parseFloat(safeGet('piscine_lon', ''));
+    if (!lat || !lon || isNaN(lat) || isNaN(lon)) {
+      el.innerHTML = '<div class="meteo-message">' + t('fc_meteo_coords') + '</div>'; return;
+    }
+
+    // State 3: insufficient regression data
+    if (!regression || regression.n < 7) {
+      el.innerHTML = '<div class="meteo-message">' + t('fc_meteo_data', { n: regression ? regression.n : 0 }) + '</div>'; return;
+    }
+
+    // Try cache
+    let tomorrowAir = null;
+    const cached = safeGet('openmeteo_forecast');
+    if (cached) {
+      try {
+        const c = JSON.parse(cached);
+        if (Date.now() - c.cached_at < OPENMETEO_CACHE_MS) {
+          tomorrowAir = c.tomorrow_max;
+        }
+      } catch (_) {}
+    }
+
+    // Fetch if not cached
+    if (tomorrowAir === null) {
+      try {
+        const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat
+          + '&longitude=' + lon + '&daily=temperature_2m_max&forecast_days=2&timezone=auto';
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        tomorrowAir = data.daily.temperature_2m_max[1];
+        safeSet('openmeteo_forecast', JSON.stringify({ tomorrow_max: tomorrowAir, cached_at: Date.now() }));
+      } catch (_) {
+        // State 2: API failed — show hours since last cache
+        const lastCached = (() => { try { return JSON.parse(safeGet('openmeteo_forecast', 'null')); } catch (_) { return null; } })();
+        const hoursAgo = lastCached ? Math.round((Date.now() - lastCached.cached_at) / 3600000) : '?';
+        el.innerHTML = '<div class="meteo-message">' + t('fc_meteo_api', { h: hoursAgo }) + '</div>'; return;
+      }
+    }
+
+    const predictedWater = (regression.slope * tomorrowAir + regression.intercept).toFixed(1);
+    el.innerHTML = '<div class="meteo-row highlight">' + t('fc_meteo_tmr', { air: Math.round(tomorrowAir), water: predictedWater }) + '</div>';
+  }
+
   // Initial load + refresh toutes les 5 min
   initUI();
+  initTabs();
+  initSettingsDrawer();
   fetchStatus();
   fetchHistory();
+  fetchDailySummary();
   setInterval(fetchStatus, 5 * 60 * 1000);
   setInterval(fetchHistory, 5 * 60 * 1000);
+  setInterval(fetchDailySummary, 5 * 60 * 1000);
 
   // Service worker (PWA offline support)
   if ('serviceWorker' in navigator) {
