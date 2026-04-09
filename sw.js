@@ -18,8 +18,15 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  const path = new URL(e.request.url).pathname;
-  const isData = path.endsWith('status.json') || path.endsWith('history.json');
+  const url = new URL(e.request.url);
+  // External requests (e.g. Open-Meteo API) bypass the cache entirely
+  if (url.hostname !== self.location.hostname) {
+    e.respondWith(fetch(e.request));
+    return;
+  }
+  const isData = url.pathname.endsWith('status.json')
+    || url.pathname.endsWith('history.json')
+    || url.pathname.endsWith('daily_summary.json');
   e.respondWith(isData ? networkFirst(e.request) : cacheFirst(e.request));
 });
 

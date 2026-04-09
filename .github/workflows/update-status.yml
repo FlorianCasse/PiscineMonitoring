@@ -59,11 +59,16 @@ jobs:
           print(f"history.json: {len(history['entries'])} entries")
           EOF
 
-      - name: Commit history.json
+      - name: Update daily_summary.json
+        env:
+          PAYLOAD: ${{ toJson(github.event.client_payload) }}
+        run: python3 scripts/aggregate_daily.py
+
+      - name: Commit data files
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add history.json
+          git add history.json daily_summary.json
           git diff --staged --quiet || git commit -m "data: update history.json [skip ci]"
           git push
 
