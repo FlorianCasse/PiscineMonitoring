@@ -29,6 +29,26 @@ The settings drawer is already being built in Iteration 3 — one extra field.
 **Priority:** P2 — add to Iteration 4 settings cleanup pass
 **Depends on:** Iteration 3 settings drawer (energy cost)
 
+## From Iteration 3 DX Review (2026-04-09)
+
+### index.html modularization
+**What:** Split the single-file `index.html` into separate JS modules (e.g., `charts.js`,
+`settings.js`, `forecast.js`). After Iteration 3, index.html will be ~47KB of inline JS.
+**Why:** Codex flagged this as the top structural DX risk for cold returns. A single file
+mixing UI, i18n, fetch, derived logic, SVG rendering, and localStorage management is
+hard to navigate after 6+ months.
+**Effort:** M (human: ~4h / CC: ~20min)
+**Priority:** P3 — post Iteration 3, when the scope is stable
+**Depends on:** Iteration 3 complete and stable for at least one season
+
+### Add MIT license + GitHub repo topics
+**What:** Add `LICENSE` file (MIT) and set GitHub repo description + topics
+(home-automation, pool-monitoring, home-assistant, github-pages).
+**Why:** Without a license, forks are legally ambiguous. Without topics, the repo is
+invisible in GitHub search.
+**Effort:** XS (human: 5min / CC: 1min)
+**Priority:** P3 — cosmetic but costs nothing
+
 ## Previously deferred
 
 - Push notifications (ntfy.sh) — user explicitly skipped in Iteration 3
