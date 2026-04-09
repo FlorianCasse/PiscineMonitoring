@@ -49,7 +49,8 @@ jobs:
               "temp_water_c": p.get("temp_water_c"),
               "temp_air_c": p.get("temp_air_c"),
               "pump_on": p.get("pump_on"),
-              "swimmable": p.get("swimmable")
+              "swimmable": p.get("swimmable"),
+              "solar_energy_total_kwh": p.get("solar_energy_total_kwh")
           })
           if len(history["entries"]) > 2016:
               history["entries"] = history["entries"][-2016:]

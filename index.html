@@ -216,6 +216,23 @@
     .forecast-label { font-size: 18px; font-weight: 700; color: #111827; }
     .forecast-sub { font-size: 12px; color: #6b7280; margin-top: 2px; }
 
+    /* Solar card */
+    .solar-card {
+      background: white;
+      border-radius: 16px;
+      padding: 14px 16px;
+      margin-bottom: 16px;
+      border: 1px solid #e5e7eb;
+      display: none;
+    }
+    .solar-card.visible { display: block; }
+    .solar-header { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 10px; }
+    .solar-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .solar-metric { text-align: center; }
+    .solar-value { font-size: 28px; font-weight: 800; color: #d97706; line-height: 1; }
+    .solar-unit { font-size: 11px; color: #9ca3af; margin-top: 2px; }
+    .solar-label { font-size: 12px; color: #6b7280; margin-top: 6px; }
+
     /* Footer */
     .footer {
       text-align: center;
@@ -300,6 +317,23 @@
     <span class="pump-badge off" id="pump-badge">—</span>
   </div>
 
+  <!-- Solar production card -->
+  <div class="solar-card" id="solar-card">
+    <div class="solar-header" id="solar-header">☀️ Solaire</div>
+    <div class="solar-metrics">
+      <div class="solar-metric">
+        <div class="solar-value" id="solar-power-value">—</div>
+        <div class="solar-unit" id="solar-power-unit">W</div>
+        <div class="solar-label" id="solar-power-label">Puissance</div>
+      </div>
+      <div class="solar-metric">
+        <div class="solar-value" id="solar-today-value">—</div>
+        <div class="solar-unit">kWh</div>
+        <div class="solar-label" id="solar-today-label">Aujourd'hui</div>
+      </div>
+    </div>
+  </div>
+
   <div class="footer" id="footer">Source : Home Assistant</div>
 
 </div>
@@ -360,6 +394,9 @@
       fc_not_today_s:    '{t}°C — chauffe trop lentement',
       fc_ready:          'Prête vers {time}',
       fc_ready_s:        '{t}°C — ça monte !',
+      solar_header:      '☀️ Solaire',
+      solar_power_label: 'Puissance',
+      solar_today_label: 'Aujourd\'hui',
       footer:            'Source : Home Assistant',
     },
     en: {
@@ -412,6 +449,9 @@
       fc_not_today_s:    '{t}°C — warming too slowly',
       fc_ready:          'Ready around {time}',
       fc_ready_s:        '{t}°C — warming up!',
+      solar_header:      '☀️ Solar',
+      solar_power_label: 'Power',
+      solar_today_label: 'Today',
       footer:            'Source: Home Assistant',
     }
   };
@@ -432,8 +472,11 @@
     document.getElementById('metric-label-air').textContent  = t('label_air');
     document.getElementById('metric-label-pump').textContent = t('label_pump');
     document.getElementById('trend-title').textContent    = t('trend_title');
-    document.getElementById('pump-label').textContent     = t('pump_row');
-    document.getElementById('footer').textContent         = t('footer');
+    document.getElementById('pump-label').textContent        = t('pump_row');
+    document.getElementById('solar-header').textContent      = t('solar_header');
+    document.getElementById('solar-power-label').textContent = t('solar_power_label');
+    document.getElementById('solar-today-label').textContent = t('solar_today_label');
+    document.getElementById('footer').textContent            = t('footer');
   }
 
   // ── Core ──────────────────────────────────────────────────────────────────
@@ -539,6 +582,13 @@
     pumpBadge.className   = 'pump-badge ' + (d.pump_on ? 'on' : 'off');
     pumpBadge.textContent = t(d.pump_on ? 'pump_on' : 'pump_off');
 
+    const solarPowerW = parseFloat(d.solar_power_w);
+    const solarTotalKwh = parseFloat(d.solar_energy_total_kwh);
+    if (!isNaN(solarPowerW)) {
+      lastSolarData = { powerW: solarPowerW, totalKwh: isNaN(solarTotalKwh) ? null : solarTotalKwh };
+      renderSolar(solarPowerW, lastSolarData.totalKwh);
+    }
+
     document.getElementById('last-updated').textContent =
       updatedAt ? timeAgo(d.updated_at) : t('time_unknown');
   }
@@ -546,6 +596,7 @@
   let lastGoodData = null;
   let historyEntries = [];
   let lastKnownTempC = null;
+  let lastSolarData = null; // { powerW, totalKwh }
 
   function renderSparkline(entries) {
     const card = document.getElementById('trend-card');
@@ -652,6 +703,38 @@
     document.getElementById('forecast-sub').textContent = forecast.sub;
   }
 
+  function renderSolar(powerW, totalKwh) {
+    const card = document.getElementById('solar-card');
+    if (powerW == null || isNaN(powerW)) { card.classList.remove('visible'); return; }
+    card.classList.add('visible');
+
+    const powerValEl = document.getElementById('solar-power-value');
+    const powerUnitEl = document.getElementById('solar-power-unit');
+    if (powerW >= 1000) {
+      powerValEl.textContent = (powerW / 1000).toFixed(2);
+      powerUnitEl.textContent = 'kW';
+    } else {
+      powerValEl.textContent = Math.round(powerW);
+      powerUnitEl.textContent = 'W';
+    }
+
+    const todayValEl = document.getElementById('solar-today-value');
+    if (totalKwh != null && !isNaN(totalKwh) && historyEntries.length > 0) {
+      const todayStr = new Date().toDateString();
+      const todayFirst = historyEntries.find(e =>
+        e.solar_energy_total_kwh != null &&
+        new Date(e.ts).toDateString() === todayStr
+      );
+      if (todayFirst) {
+        todayValEl.textContent = Math.max(0, totalKwh - todayFirst.solar_energy_total_kwh).toFixed(2);
+      } else {
+        todayValEl.textContent = '—';
+      }
+    } else {
+      todayValEl.textContent = '—';
+    }
+  }
+
   async function fetchHistory() {
     try {
       const res = await fetch('history.json?ts=' + Date.now());
@@ -660,6 +743,7 @@
       historyEntries = data.entries || [];
       renderSparkline(historyEntries);
       if (lastKnownTempC !== null) renderForecast(lastKnownTempC);
+      if (lastSolarData) renderSolar(lastSolarData.powerW, lastSolarData.totalKwh);
     } catch (e) {
       // history unavailable — sparkline and forecast stay hidden
     }
