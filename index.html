@@ -916,7 +916,7 @@
 
   // ── Core ──────────────────────────────────────────────────────────────────
   const STALE_THRESHOLD_MS = 15 * 60 * 1000;
-  const SWIM_TEMP_C = 20;
+  const SWIM_TEMP_C = 24;
 
   function computeVerdict(tempAir, tempWater, swimmable, pumpOn) {
     if (isNaN(tempAir)) return { cls: 'meh', emoji: '🤔', label: t('verdict_no_air'), sub: '' };
