@@ -102,6 +102,11 @@
       font-size: 14px;
       color: #6b7280;
     }
+    .status-trigger {
+      font-size: 13px;
+      color: #9ca3af;
+      margin-top: 6px;
+    }
 
     /* Metrics grid */
     .metrics {
@@ -237,6 +242,7 @@
     <span class="status-icon" id="status-icon">⏳</span>
     <div class="status-label" id="status-label">Chargement…</div>
     <div class="status-reason" id="status-reason"></div>
+    <div class="status-trigger" id="status-trigger"></div>
   </div>
 
   <!-- Metrics -->
@@ -316,6 +322,7 @@
       sensor_fail_sub:   'Vérifier HA — capteur hors ligne',
       status_ok:         'Eau OK pour se baigner !',
       status_no:         'Pas de baignade pour l\'instant',
+      status_no_trigger: '→ Prête à partir de {threshold}°C (+{delta}°C)',
       error_label:       'Erreur de chargement',
       error_sub:         'Vérifier la connexion et réessayer',
       label_water:       'Température',
@@ -367,6 +374,7 @@
       sensor_fail_sub:   'Check Home Assistant — sensor offline',
       status_ok:         'Pool ready for swimming!',
       status_no:         'Not ready for swimming yet',
+      status_no_trigger: '→ Ready at {threshold}°C (+{delta}°C to go)',
       error_label:       'Loading error',
       error_sub:         'Check connection and try again',
       label_water:       'Temperature',
@@ -430,6 +438,7 @@
 
   // ── Core ──────────────────────────────────────────────────────────────────
   const STALE_THRESHOLD_MS = 15 * 60 * 1000;
+  const SWIM_TEMP_C = 20;
 
   function computeVerdict(tempAir, tempWater, swimmable, pumpOn) {
     if (isNaN(tempAir)) return { cls: 'meh', emoji: '🤔', label: t('verdict_no_air'), sub: '' };
@@ -464,6 +473,7 @@
       document.getElementById('status-icon').textContent  = '🔴';
       document.getElementById('status-label').textContent = t('status_stale');
       document.getElementById('status-reason').textContent = t('status_stale_sub');
+      document.getElementById('status-trigger').textContent = '';
     } else {
       document.getElementById('stale-banner').classList.remove('visible');
       const card = document.getElementById('status-card');
@@ -472,11 +482,24 @@
         document.getElementById('status-icon').textContent  = '⚠️';
         document.getElementById('status-label').textContent = t('sensor_fail');
         document.getElementById('status-reason').textContent = t('sensor_fail_sub');
+        document.getElementById('status-trigger').textContent = '';
       } else {
         card.className = d.swimmable ? 'status-card ok' : 'status-card no';
         document.getElementById('status-icon').textContent  = d.swimmable ? '🟢' : '🔴';
         document.getElementById('status-label').textContent = t(d.swimmable ? 'status_ok' : 'status_no');
-        document.getElementById('status-reason').textContent = '';
+        if (!d.swimmable && d.reason) {
+          document.getElementById('status-reason').textContent = d.reason;
+          const tw = parseFloat(d.temp_water_c);
+          const delta = !isNaN(tw) && tw < SWIM_TEMP_C
+            ? (SWIM_TEMP_C - tw).toFixed(1)
+            : null;
+          document.getElementById('status-trigger').textContent = delta !== null
+            ? t('status_no_trigger', { threshold: SWIM_TEMP_C, delta })
+            : '';
+        } else {
+          document.getElementById('status-reason').textContent = '';
+          document.getElementById('status-trigger').textContent = '';
+        }
       }
     }
 
@@ -671,6 +694,7 @@
     document.getElementById('status-icon').textContent = '⚠️';
     document.getElementById('status-label').textContent = t('error_label');
     document.getElementById('status-reason').textContent = t('error_sub');
+    document.getElementById('status-trigger').textContent = '';
     document.getElementById('metric-temp').classList.remove('loading');
     document.getElementById('metric-air-temp').classList.remove('loading');
     document.getElementById('metric-pump-power').classList.remove('loading');
