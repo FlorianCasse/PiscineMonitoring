@@ -1,1674 +1,1157 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ma Piscine</title>
-  <meta name="theme-color" content="#3b82f6">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="Ma Piscine">
-  <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="icon.svg">
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>Ma Piscine — Casse</title>
+<meta name="theme-color" content="#05090e"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Ma Piscine"/>
+<link rel="manifest" href="manifest.json"/>
+<link rel="apple-touch-icon" href="icon.svg"/>
+<link rel="icon" href="icon.svg" type="image/svg+xml"/>
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #f0f4f8;
-      min-height: 100vh;
-      padding: 16px;
-    }
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Tenor+Sans&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
 
-    .container {
-      max-width: 420px;
-      margin: 0 auto;
-    }
+<style>
+  :root {
+    --bg: #05090e;
+    --bg-2: #0a1118;
+    --ink: #e9f1f7;
+    --ink-dim: rgba(233,241,247,0.62);
+    --ink-faint: rgba(233,241,247,0.38);
+    --line: rgba(233,241,247,0.08);
+    --line-strong: rgba(233,241,247,0.14);
+    --accent: #6fb9ff;
+    --accent-2: #9fd8c7;
+    --warm: #f5b872;
+    --serif: 'Tenor Sans', 'Helvetica Neue', sans-serif;
+  }
 
-    /* Header */
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 0 16px;
-    }
-    .header-title {
-      font-size: 15px;
-      font-weight: 600;
-      color: #374151;
-    }
-    .header-time {
-      font-size: 12px;
-      color: #9ca3af;
-    }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
 
-    /* Staleness banner */
-    .stale-banner {
-      background: #dc2626;
-      color: white;
-      text-align: center;
-      font-size: 13px;
-      font-weight: 600;
-      padding: 10px 16px;
-      border-radius: 10px;
-      margin-bottom: 12px;
-      display: none;
-    }
-    .stale-banner.visible { display: block; }
+  #app { min-height: 100vh; width: 100%; position: relative; }
+  ::-webkit-scrollbar { width: 0; background: transparent; }
 
-    /* Hero status card */
-    .status-card {
-      border-radius: 20px;
-      padding: 36px 24px;
-      text-align: center;
-      margin-bottom: 16px;
-      transition: background 0.3s, border-color 0.3s;
-    }
-    .status-card.ok {
-      background: #f0fdf4;
-      border: 2px solid #22c55e;
-    }
-    .status-card.no {
-      background: #fef2f2;
-      border: 2px solid #ef4444;
-    }
-    .status-card.loading {
-      background: #f9fafb;
-      border: 2px solid #e5e7eb;
-      animation: pulse 1.5s ease-in-out infinite;
-    }
-    .status-card.stale {
-      background: #fef2f2;
-      border: 2px solid #ef4444;
-    }
-    .status-card.sensors_fail {
-      background: #fffbeb;
-      border: 2px solid #f59e0b;
-    }
+  .serif { font-family: var(--serif); letter-spacing: 0.01em; font-optical-sizing: auto; }
+  .mono  { font-family: 'JetBrains Mono', monospace; }
+  .num   { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
 
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.6; }
-    }
+  @keyframes rise   { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  .rise             { animation: rise 0.9s cubic-bezier(.2,.7,.2,1) both; }
+  @keyframes breathe{ 0%,100% { transform: scale(1); opacity: 0.9; } 50% { transform: scale(1.04); opacity: 1; } }
+  @keyframes ripple { 0% { transform: scale(0.4); opacity: 0.55; } 100% { transform: scale(1.7); opacity: 0; } }
+  @keyframes grow-up{ from { transform: scaleY(0); } to { transform: scaleY(1); } }
+  @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-    .status-icon { font-size: 60px; margin-bottom: 12px; display: block; }
-    .status-label {
-      font-size: 24px;
-      font-weight: 800;
-      color: #111827;
-      line-height: 1.2;
-      margin-bottom: 8px;
-    }
-    .status-reason {
-      font-size: 14px;
-      color: #6b7280;
-    }
-    .status-trigger {
-      font-size: 13px;
-      color: #9ca3af;
-      margin-top: 6px;
-    }
+  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
 
-    /* Metrics grid */
-    .metrics {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-bottom: 16px;
-    }
-    .metric {
-      background: white;
-      border-radius: 16px;
-      padding: 14px 10px;
-      text-align: center;
-      border: 1px solid #e5e7eb;
-    }
-    .metric.loading {
-      animation: pulse 1.5s ease-in-out infinite;
-    }
-    .metric-icon { font-size: 24px; margin-bottom: 6px; display: block; }
-    .metric-value {
-      font-size: 28px;
-      font-weight: 800;
-      color: #111827;
-      line-height: 1;
-    }
-    .metric-unit { font-size: 11px; color: #9ca3af; margin-top: 2px; }
-    .metric-label { font-size: 12px; color: #6b7280; margin-top: 6px; }
+  /* Stale banner */
+  .stale-banner {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(220, 38, 38, 0.92);
+    color: #fff; text-align: center;
+    font-size: 13px; font-weight: 500;
+    padding: 10px 16px;
+    backdrop-filter: blur(10px);
+    display: none;
+  }
+  .stale-banner.visible { display: block; }
 
-    .metric-value.ok { color: #16a34a; }
-    .metric-value.warn { color: #d97706; }
-    .metric-value.bad { color: #dc2626; }
+  /* Language toggle chip (replaces the Tweaks panel in production) */
+  .lang-toggle {
+    position: fixed; top: 14px; right: 14px; z-index: 50;
+    background: rgba(10,17,24,0.7);
+    backdrop-filter: blur(14px) saturate(160%);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    padding: 6px;
+    display: flex; gap: 2px;
+    font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.1em;
+  }
+  .lang-toggle button {
+    padding: 4px 9px; border-radius: 999px;
+    color: var(--ink-faint);
+    transition: color 0.2s, background 0.2s;
+  }
+  .lang-toggle button[aria-pressed="true"] {
+    background: rgba(255,255,255,0.1);
+    color: var(--ink);
+  }
 
-    /* Verdict BBQ card */
-    .verdict-card {
-      background: white;
-      border-radius: 16px;
-      padding: 16px 18px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      margin-bottom: 16px;
-      border: 1px solid #e5e7eb;
-    }
-    .verdict-card.perfect { border-color: #22c55e; background: #f0fdf4; }
-    .verdict-card.bbq { border-color: #f97316; background: #fff7ed; }
-    .verdict-card.pool { border-color: #3b82f6; background: #eff6ff; }
-    .verdict-card.meh { border-color: #e5e7eb; }
-    .verdict-card.cold { border-color: #93c5fd; background: #eff6ff; }
-    .verdict-emoji { font-size: 34px; flex-shrink: 0; }
-    .verdict-label { font-size: 15px; font-weight: 700; color: #111827; }
-    .verdict-sub { font-size: 12px; color: #6b7280; margin-top: 2px; }
-
-    /* Pump row */
-    .pump-row {
-      background: white;
-      border-radius: 16px;
-      padding: 16px 18px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-      border: 1px solid #e5e7eb;
-    }
-    .pump-label { font-size: 14px; color: #374151; font-weight: 500; }
-    .pump-badge {
-      font-size: 12px;
-      font-weight: 700;
-      padding: 5px 12px;
-      border-radius: 20px;
-    }
-    .pump-badge.on { background: #dcfce7; color: #166534; }
-    .pump-badge.off { background: #fee2e2; color: #991b1b; }
-
-    /* Trend card */
-    .trend-card {
-      background: white;
-      border-radius: 16px;
-      padding: 14px 16px 12px;
-      margin-bottom: 16px;
-      border: 1px solid #e5e7eb;
-      display: none;
-    }
-    .trend-card.visible { display: block; }
-    .trend-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      margin-bottom: 8px;
-    }
-    .trend-title { font-size: 13px; font-weight: 600; color: #374151; }
-    .trend-range { font-size: 11px; color: #9ca3af; }
-    .trend-card svg { width: 100%; height: 80px; display: block; overflow: visible; }
-
-    /* Forecast card */
-    .forecast-card {
-      background: white;
-      border-radius: 16px;
-      padding: 16px 18px;
-      display: none;
-      align-items: center;
-      gap: 14px;
-      margin-bottom: 16px;
-      border: 1px solid #e5e7eb;
-    }
-    .forecast-card.visible { display: flex; }
-    .forecast-icon { font-size: 28px; flex-shrink: 0; }
-    .forecast-label { font-size: 18px; font-weight: 700; color: #111827; }
-    .forecast-sub { font-size: 12px; color: #6b7280; margin-top: 2px; }
-
-    /* Solar card */
-    .solar-card {
-      background: white;
-      border-radius: 16px;
-      padding: 14px 16px;
-      margin-bottom: 16px;
-      border: 1px solid #e5e7eb;
-      display: none;
-    }
-    .solar-card.visible { display: block; }
-    .solar-header { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 10px; }
-    .solar-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .solar-metric { text-align: center; }
-    .solar-value { font-size: 28px; font-weight: 800; color: #d97706; line-height: 1; }
-    .solar-unit { font-size: 11px; color: #9ca3af; margin-top: 2px; }
-    .solar-label { font-size: 12px; color: #6b7280; margin-top: 6px; }
-
-    /* Footer */
-    .footer {
-      text-align: center;
-      font-size: 11px;
-      color: #d1d5db;
-      padding-top: 8px;
-    }
-
-    /* ── Tab navigation ───────────────────────────────────────────────────── */
-    .tab-bar {
-      display: flex;
-      gap: 4px;
-      background: white;
-      border-radius: 12px;
-      padding: 4px;
-      margin-bottom: 12px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-    }
-    .tab-btn {
-      flex: 1;
-      text-align: center;
-      font-size: 12px;
-      font-weight: 600;
-      padding: 6px 4px;
-      border-radius: 8px;
-      color: #9ca3af;
-      cursor: pointer;
-      background: none;
-      border: none;
-      font-family: inherit;
-    }
-    .tab-btn.active { background: #3b82f6; color: white; }
-
-    .sub-tab-bar {
-      display: flex;
-      gap: 4px;
-      margin-bottom: 12px;
-    }
-    .sub-tab-btn {
-      flex: 1;
-      text-align: center;
-      font-size: 12px;
-      font-weight: 600;
-      padding: 5px 4px;
-      border-radius: 8px;
-      color: #9ca3af;
-      cursor: pointer;
-      background: white;
-      border: 1px solid #e5e7eb;
-      font-family: inherit;
-    }
-    .sub-tab-btn.active { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
-
-    /* ── Season stats cards ───────────────────────────────────────────────── */
-    .stats-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-    .stat {
-      background: white;
-      border-radius: 12px;
-      padding: 14px 10px;
-      text-align: center;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-    }
-    .stat-value { font-size: 36px; font-weight: 800; line-height: 1; color: #1d4ed8; }
-    .stat-unit  { font-size: 11px; color: #9ca3af; margin-top: 2px; }
-    .stat-label { font-size: 12px; color: #6b7280; margin-top: 4px; }
-    .stat.swim .stat-value       { color: #059669; }
-    .stat.solar-stat .stat-value { color: #d97706; }
-
-    /* ── Season bests ─────────────────────────────────────────────────────── */
-    .season-bests {
-      background: white;
-      border-radius: 12px;
-      padding: 12px 14px;
-      margin-bottom: 12px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-    }
-    .best-item {
-      font-size: 13px;
-      color: #374151;
-      padding: 4px 0;
-      display: flex;
-      justify-content: space-between;
-    }
-    .best-value { font-weight: 700; color: #111827; }
-
-    /* ── Heatmap ──────────────────────────────────────────────────────────── */
-    #swim-heatmap {
-      background: white;
-      border-radius: 12px;
-      padding: 12px 14px;
-      margin-bottom: 12px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-    }
-    .heatmap-title { font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 8px; }
-    .heatmap-grid  { display: flex; gap: 3px; flex-wrap: wrap; }
-    .heatmap-cell  { width: 14px; height: 14px; border-radius: 2px; background: #e5e7eb; }
-    .heatmap-cell.swim-lo  { background: #86efac; }
-    .heatmap-cell.swim-mid { background: #4ade80; }
-    .heatmap-cell.swim-hi  { background: #16a34a; }
-
-    /* ── Historical chart cards ───────────────────────────────────────────── */
-    .hist-card {
-      background: white;
-      border-radius: 16px;
-      padding: 14px 16px 12px;
-      margin-bottom: 12px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-    }
-    .hist-card-header { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 8px; }
-    .hist-card-sub    { font-size: 11px; color: #9ca3af; font-style: italic; margin-bottom: 6px; }
-    .hist-svg         { width: 100%; display: block; overflow: visible; }
-
-    /* ── Period pills ─────────────────────────────────────────────────────── */
-    .period-pills { display: flex; gap: 6px; margin-bottom: 4px; }
-    .period-pill {
-      font-size: 11px;
-      padding: 3px 10px;
-      border-radius: 20px;
-      border: 1px solid #e5e7eb;
-      color: #6b7280;
-      cursor: pointer;
-      background: none;
-      font-family: inherit;
-    }
-    .period-pill.active { background: #3b82f6; color: white; border-color: #3b82f6; }
-    .period-available-label { font-size: 10px; color: #9ca3af; margin-bottom: 6px; min-height: 14px; }
-
-    /* ── Energy section ───────────────────────────────────────────────────── */
-    .energie-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 14px;
-      font-weight: 600;
-      color: #374151;
-      margin-bottom: 10px;
-    }
-    .settings-open-btn { background: none; border: none; font-size: 20px; cursor: pointer; padding: 2px 4px; }
-    .energy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-    .energy-item { background: white; border-radius: 12px; padding: 12px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
-    .energy-value { font-size: 24px; font-weight: 800; color: #059669; line-height: 1; }
-    .energy-unit  { font-size: 11px; color: #9ca3af; margin-top: 2px; }
-    .energy-label { font-size: 11px; color: #6b7280; margin-top: 4px; }
-    .meteo-row { font-size: 14px; color: #374151; padding: 6px 0; }
-    .meteo-row.highlight { font-weight: 700; font-size: 16px; color: #1d4ed8; }
-    .meteo-message { font-size: 13px; color: #9ca3af; font-style: italic; padding: 8px 0; }
-
-    /* ── Empty states ─────────────────────────────────────────────────────── */
-    .hist-empty-a {
-      background: white;
-      border-radius: 16px;
-      padding: 24px 16px;
-      text-align: center;
-      font-size: 14px;
-      color: #6b7280;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-      margin-bottom: 12px;
-    }
-    .hist-empty-b { text-align: center; font-size: 12px; color: #9ca3af; padding: 10px 0; font-style: italic; }
-
-    /* ── Settings drawer ──────────────────────────────────────────────────── */
-    .settings-backdrop {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.35);
-      z-index: 100;
-    }
-    .settings-backdrop.open { display: block; }
-    .settings-drawer {
-      position: fixed;
-      bottom: 0;
-      left: 50%;
-      transform: translateX(-50%) translateY(100%);
-      width: 100%;
-      max-width: 480px;
-      background: white;
-      border-radius: 20px 20px 0 0;
-      padding: 20px 20px 40px;
-      z-index: 101;
-      transition: transform 0.25s ease;
-      box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
-    }
-    .settings-drawer.open { transform: translateX(-50%) translateY(0); }
-    .settings-drawer-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 15px;
-      font-weight: 700;
-      color: #111827;
-      margin-bottom: 20px;
-    }
-    .settings-close {
-      background: none;
-      border: none;
-      font-size: 20px;
-      cursor: pointer;
-      color: #6b7280;
-      padding: 2px 8px;
-    }
-    .settings-field { margin-bottom: 16px; }
-    .settings-field label {
-      display: block;
-      font-size: 13px;
-      font-weight: 600;
-      color: #374151;
-      margin-bottom: 6px;
-    }
-    .settings-field input {
-      width: 100%;
-      padding: 10px 12px;
-      border: 1px solid #e5e7eb;
-      border-radius: 10px;
-      font-size: 15px;
-      color: #111827;
-      box-sizing: border-box;
-      font-family: inherit;
-    }
-    .settings-field input:focus { outline: none; border-color: #3b82f6; }
-  </style>
+  /* Skeleton on first load */
+  .boot {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    color: var(--ink-faint); font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    letter-spacing: 0.2em; text-transform: uppercase;
+  }
+  .boot::after {
+    content: ''; display: inline-block; width: 6px; height: 6px; margin-left: 10px;
+    border-radius: 50%; background: var(--accent);
+    animation: ripple 1.8s ease-out infinite;
+  }
+</style>
 </head>
 <body>
-<div class="container">
-
-  <div class="header">
-    <span class="header-title" id="header-title">🏊 Ma Piscine</span>
-    <span class="header-time" id="last-updated">—</span>
-  </div>
-
-  <div class="stale-banner" id="stale-banner">⚠️ Impossible de vérifier — données trop vieilles</div>
-
-  <!-- Tab bar -->
-  <div class="tab-bar">
-    <button class="tab-btn active" data-tab="aujourdhui" id="tab-btn-aujourdhui">Aujourd'hui</button>
-    <button class="tab-btn" data-tab="7jours" id="tab-btn-7jours">7 jours</button>
-    <button class="tab-btn" data-tab="historique" id="tab-btn-historique">Historique</button>
-  </div>
-
-  <!-- ── Tab: Aujourd'hui ─────────────────────────────────────────────────── -->
-  <div id="tab-aujourdhui" class="tab-panel">
-
-    <div class="status-card loading" id="status-card">
-      <span class="status-icon" id="status-icon">⏳</span>
-      <div class="status-label" id="status-label">Chargement…</div>
-      <div class="status-reason" id="status-reason"></div>
-      <div class="status-trigger" id="status-trigger"></div>
-    </div>
-
-    <div class="metrics">
-      <div class="metric loading" id="metric-temp">
-        <span class="metric-icon">🌡️</span>
-        <div class="metric-value" id="temp-value">—</div>
-        <div class="metric-unit">°C</div>
-        <div class="metric-label" id="metric-label-temp">Température</div>
-      </div>
-      <div class="metric loading" id="metric-air-temp">
-        <span class="metric-icon">🌤️</span>
-        <div class="metric-value" id="air-temp-value">—</div>
-        <div class="metric-unit">°C</div>
-        <div class="metric-label" id="metric-label-air">Extérieur</div>
-      </div>
-      <div class="metric loading" id="metric-pump-power">
-        <span class="metric-icon">⚡</span>
-        <div class="metric-value" id="power-value">—</div>
-        <div class="metric-unit">Watts</div>
-        <div class="metric-label" id="metric-label-pump">Pompe</div>
-      </div>
-    </div>
-
-    <div class="solar-card" id="solar-card">
-      <div class="solar-header" id="solar-header">☀️ Solaire</div>
-      <div class="solar-metrics">
-        <div class="solar-metric">
-          <div class="solar-value" id="solar-power-value">—</div>
-          <div class="solar-unit" id="solar-power-unit">W</div>
-          <div class="solar-label" id="solar-power-label">Puissance</div>
-        </div>
-        <div class="solar-metric">
-          <div class="solar-value" id="solar-today-value">—</div>
-          <div class="solar-unit">kWh</div>
-          <div class="solar-label" id="solar-today-label">Aujourd'hui</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="verdict-card" id="verdict-card">
-      <span class="verdict-emoji" id="verdict-emoji">⏳</span>
-      <div>
-        <div class="verdict-label" id="verdict-label">Analyse en cours…</div>
-        <div class="verdict-sub" id="verdict-sub"></div>
-      </div>
-    </div>
-
-    <div class="pump-row">
-      <span class="pump-label" id="pump-label">🔄 Pompe de filtration</span>
-      <span class="pump-badge off" id="pump-badge">—</span>
-    </div>
-
-  </div><!-- /#tab-aujourdhui -->
-
-  <!-- ── Tab: 7 jours ─────────────────────────────────────────────────────── -->
-  <div id="tab-7jours" class="tab-panel" style="display:none">
-
-    <div class="trend-card" id="trend-card">
-      <div class="trend-header">
-        <span class="trend-title" id="trend-title">📈 Tendance · 7j</span>
-        <span class="trend-range" id="trend-range"></span>
-      </div>
-      <svg id="temp-sparkline" viewBox="0 0 360 80" preserveAspectRatio="none"></svg>
-    </div>
-
-    <div class="forecast-card" id="forecast-card">
-      <span class="forecast-icon">🔮</span>
-      <div>
-        <div class="forecast-label" id="forecast-label">—</div>
-        <div class="forecast-sub" id="forecast-sub"></div>
-      </div>
-    </div>
-
-  </div><!-- /#tab-7jours -->
-
-  <!-- ── Tab: Historique ──────────────────────────────────────────────────── -->
-  <div id="tab-historique" class="tab-panel" style="display:none">
-
-    <div class="sub-tab-bar">
-      <button class="sub-tab-btn active" data-sub="saison" id="sub-btn-saison">Saison</button>
-      <button class="sub-tab-btn" data-sub="charts" id="sub-btn-charts">Charts</button>
-      <button class="sub-tab-btn" data-sub="energie" id="sub-btn-energie">Énergie</button>
-    </div>
-
-    <!-- Sub-tab: Saison -->
-    <div id="subtab-saison" class="sub-tab-panel">
-      <div class="stats-row">
-        <div class="stat swim">
-          <div class="stat-value" id="stat-swim-days">—</div>
-          <div class="stat-unit" id="stat-swim-unit">jours</div>
-          <div class="stat-label" id="stat-swim-label">🏊 Baignade cette saison</div>
-        </div>
-        <div class="stat solar-stat">
-          <div class="stat-value" id="stat-solar-kwh">—</div>
-          <div class="stat-unit">kWh</div>
-          <div class="stat-label" id="stat-solar-kwh-label">☀️ Production solaire</div>
-        </div>
-      </div>
-      <div id="season-bests" class="season-bests" style="display:none"></div>
-      <div id="swim-heatmap"></div>
-    </div>
-
-    <!-- Sub-tab: Charts -->
-    <div id="subtab-charts" class="sub-tab-panel" style="display:none">
-      <div class="hist-card">
-        <div class="hist-card-header" id="temp-chart-title">🌡️ Température eau</div>
-        <div class="period-pills" id="temp-chart-pills"></div>
-        <div class="period-available-label" id="temp-chart-available"></div>
-        <svg id="temp-chart-svg" class="hist-svg" viewBox="0 0 360 120" height="120" preserveAspectRatio="none"></svg>
-        <div class="hist-empty-b" id="temp-chart-empty" style="display:none"></div>
-      </div>
-      <div class="hist-card">
-        <div class="hist-card-header" id="solar-chart-title">☀️ Production solaire</div>
-        <div class="period-pills" id="solar-chart-pills"></div>
-        <div class="period-available-label" id="solar-chart-available"></div>
-        <svg id="solar-chart-svg" class="hist-svg" viewBox="0 0 360 80" height="80" preserveAspectRatio="none"></svg>
-        <div class="hist-empty-b" id="solar-chart-empty" style="display:none"></div>
-      </div>
-      <div class="hist-card">
-        <div class="hist-card-header" id="corr-title">📊 Corrélation air / eau</div>
-        <div class="hist-card-sub" id="corr-disclaimer"></div>
-        <svg id="corr-svg" class="hist-svg" viewBox="0 0 300 140" height="140" preserveAspectRatio="none"></svg>
-        <div class="hist-empty-b" id="corr-empty" style="display:none"></div>
-      </div>
-    </div>
-
-    <!-- Sub-tab: Énergie -->
-    <div id="subtab-energie" class="sub-tab-panel" style="display:none">
-      <div class="energie-header">
-        <span id="energie-title">💰 Énergie</span>
-        <button class="settings-open-btn" id="settings-open-btn">⚙️</button>
-      </div>
-      <div class="energy-grid" id="energy-grid"></div>
-      <div class="hist-card" id="meteo-forecast-card">
-        <div class="hist-card-header" id="meteo-forecast-title">🌤️ Prévision demain</div>
-        <div id="meteo-forecast-content"></div>
-      </div>
-    </div>
-
-    <!-- Empty state A: daily_summary.json not yet available -->
-    <div class="hist-empty-a" id="hist-empty-a" style="display:none"></div>
-
-  </div><!-- /#tab-historique -->
-
-  <div class="footer" id="footer">Source : Home Assistant</div>
-
-</div><!-- /.container -->
-
-<!-- Settings drawer (outside container for correct z-index stacking) -->
-<div class="settings-backdrop" id="settings-backdrop"></div>
-<div class="settings-drawer" id="settings-drawer">
-  <div class="settings-drawer-header">
-    <span id="settings-title">⚙️ Paramètres</span>
-    <button class="settings-close" id="settings-close">✕</button>
-  </div>
-  <div class="settings-field">
-    <label id="settings-tariff-label">Tarif (€/kWh)</label>
-    <input id="settings-tariff" type="number" step="0.01" min="0" placeholder="e.g. 0.22">
-  </div>
-  <div class="settings-field">
-    <label id="settings-lat-label">Latitude</label>
-    <input id="settings-lat" type="number" step="0.0001" placeholder="e.g. 48.8566">
-  </div>
-  <div class="settings-field">
-    <label id="settings-lon-label">Longitude</label>
-    <input id="settings-lon" type="number" step="0.0001" placeholder="e.g. 2.3522">
-  </div>
-</div>
+<div id="stale-banner" class="stale-banner"></div>
+<div id="app"><div class="boot">Chargement</div></div>
 
 <script>
-  // ── i18n ─────────────────────────────────────────────────────────────────
-  const lang = navigator.language.startsWith('fr') ? 'fr' : 'en';
-  document.documentElement.lang = lang;
+/* ========== Data pipeline (vanilla, runs before React) ========== */
 
-  const S = {
-    fr: {
-      page_title:        'Ma Piscine',
-      header_title:      '🏊 Ma Piscine',
-      stale_banner:      '⚠️ Impossible de vérifier — données trop vieilles',
-      status_loading:    'Chargement…',
-      status_analysis:   'Analyse en cours…',
-      status_stale:      'Impossible de vérifier',
-      status_stale_sub:  'Données trop vieilles — vérifier la connexion HA',
-      sensor_fail:       'Capteur indétectable',
-      sensor_fail_sub:   'Vérifier HA — capteur hors ligne',
-      status_ok:         'Eau OK pour se baigner !',
-      status_no:         'Pas de baignade pour l\'instant',
-      status_no_trigger: '→ Prête à partir de {threshold}°C (+{delta}°C)',
-      error_label:       'Erreur de chargement',
-      error_sub:         'Vérifier la connexion et réessayer',
-      label_water:       'Température',
-      label_air:         'Extérieur',
-      label_pump:        'Pompe',
-      pump_row:          '🔄 Pompe de filtration',
-      pump_on:           'EN MARCHE',
-      pump_off:          'À L\'ARRÊT',
-      time_now:          'à l\'instant',
-      time_min1:         'il y a 1 min',
-      time_mins:         'il y a {n} min',
-      time_h1:           'il y a 1 h',
-      time_hrs:          'il y a {n} h',
-      time_unknown:      'Heure inconnue',
-      verdict_no_air:    'Données ext. indisponibles',
-      v_perfect_l:       'Journée parfaite !',
-      v_perfect_s:       'BBQ + piscine — tout est réuni !',
-      v_bbq_l:           'Top pour un BBQ !',
-      v_bbq_s_soon:      'La piscine sera bientôt prête',
-      v_bbq_s_not:       'Piscine pas encore prête',
-      v_pool_l:          'Bonne baignade !',
-      v_pool_s:          'Il fait un peu frais dehors',
-      v_meh_l:           'Journée correcte',
-      v_meh_s:           'Ni vraiment BBQ ni vraiment piscine',
-      v_cold_l:          'Patience…',
-      v_cold_s:          'La belle saison arrive !',
-      trend_title:       '📈 Tendance · 7j',
-      trend_range:       'Min {min}° · Max {max}°',
-      fc_insufficient:   'Données insuffisantes',
-      fc_stable:         'Stable',
-      fc_stable_s:       '{t}°C — pas de tendance',
-      fc_cooling:        'Refroidit',
-      fc_cooling_s:      '{t}°C en baisse',
-      fc_not_today:      'Pas aujourd\'hui',
-      fc_not_today_s:    '{t}°C — chauffe trop lentement',
-      fc_ready:          'Prête vers {time}',
-      fc_ready_s:        '{t}°C — ça monte !',
-      solar_header:      '☀️ Solaire',
-      solar_power_label: 'Puissance',
-      solar_today_label: 'Aujourd\'hui',
-      footer:            'Source : Home Assistant',
-      tab_aujourdhui:    'Aujourd\'hui',
-      tab_7jours:        '7 jours',
-      tab_historique:    'Historique',
-      sub_saison:        'Saison',
-      sub_charts:        'Charts',
-      sub_energie:       'Énergie',
-      stat_swim_label:   '🏊 Baignade cette saison',
-      stat_solar_label:  '☀️ Production solaire',
-      stat_swim_unit:    'jours',
-      best_water:        'Record eau',
-      best_solar:        'Record solaire',
-      heatmap_title:     '🗓️ Calendrier',
-      hist_temp_title:   '🌡️ Température eau',
-      hist_solar_title:  '☀️ Production solaire',
-      hist_corr_title:   '📊 Corrélation air / eau',
-      hist_corr_sub:     'À titre indicatif — corrélation historique',
-      period_7j:         '7j',
-      period_30j:        '30j',
-      period_90j:        '90j',
-      period_available:  '{n} jours disponibles',
-      hist_empty_a:      'Données historiques disponibles à partir de demain.',
-      hist_empty_b:      'Aucune donnée pour cette période. Essayez 90j ou vérifiez votre capteur HA.',
-      fc_meteo_coords:   'Configurez vos coordonnées dans les paramètres',
-      fc_meteo_api:      'Prévision indisponible (API, dernière : {h}h)',
-      fc_meteo_data:     'Données insuffisantes ({n}/7 jours requis)',
-      fc_meteo_tmr:      'Demain : {air}°C air → ~{water}°C piscine',
-      energie_title:     '💰 Énergie',
-      energy_savings_lbl:'Économies aujourd\'hui',
-      energy_season_lbl: 'Économies saison',
-      energy_pump_lbl:   'Coût pompe saison',
-      settings_title:    '⚙️ Paramètres',
-      settings_tariff:   'Tarif (€/kWh)',
-      settings_lat:      'Latitude',
-      settings_lon:      'Longitude',
-      meteo_title:       '🌤️ Prévision demain',
+const STALE_MINUTES = 15;
+const SEASON_START_MONTH = 4; // April — week/month totals scope
+const POOL_TARGET = 26;
+const SOLAR_CAPACITY_KW = 6.4;
+
+// Fetch a JSON file with graceful fallback (returns null on failure)
+async function tryFetch(path) {
+  try {
+    const res = await fetch(path, { cache: 'no-store' });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (_) { return null; }
+}
+
+// Fetch Open-Meteo forecast (7-day + current humidity/wind/uv)
+async function fetchMeteo(lat, lon) {
+  if (!lat || !lon) return null;
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}`
+      + `&current=relative_humidity_2m,wind_speed_10m,wind_direction_10m,uv_index,apparent_temperature`
+      + `&daily=weather_code,temperature_2m_max,temperature_2m_min`
+      + `&forecast_days=7&timezone=auto`;
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (_) { return null; }
+}
+
+// Weather code → icon id (sun | cloud-sun | cloud | rain)
+function wmoToIcon(code) {
+  if (code == null) return 'sun';
+  if (code === 0) return 'sun';
+  if (code <= 2) return 'cloud-sun';
+  if (code <= 3) return 'cloud';
+  if (code <= 48) return 'cloud';
+  if (code <= 67) return 'rain';
+  if (code <= 77) return 'cloud';
+  if (code <= 82) return 'rain';
+  return 'cloud';
+}
+
+// Wind direction (deg) → French compass
+function degToCompass(deg) {
+  if (deg == null) return '';
+  const dirs = ['N','NE','E','SE','S','SO','O','NO'];
+  return dirs[Math.round(((deg % 360) / 45)) % 8];
+}
+
+// Short day label for the next N days
+function shortDay(date, lang) {
+  const fr = ['Dim.','Lun.','Mar.','Mer.','Jeu.','Ven.','Sam.'];
+  const en = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  return (lang === 'fr' ? fr : en)[date.getDay()];
+}
+
+// Pool verdict from temperature (matches status.reason heuristic)
+function poolVerdict(tempC) {
+  if (tempC == null) return 'a-bit-fresh';
+  if (tempC < 18) return 'cold';
+  if (tempC < 21) return 'a-bit-fresh';
+  if (tempC < 24) return 'ok';
+  if (tempC < 28) return 'perfect';
+  return 'warm';
+}
+
+// Bucket history entries hourly, keeping the last sample per hour
+function hourlyBuckets(entries, hoursBack, field, now) {
+  if (!entries || !entries.length) return [];
+  const cutoff = now.getTime() - hoursBack * 3600 * 1000;
+  const byHour = new Map();
+  for (const e of entries) {
+    const t = new Date(e.ts).getTime();
+    if (t < cutoff) continue;
+    const hourKey = Math.floor(t / 3600000);
+    byHour.set(hourKey, e[field]);
+  }
+  return Array.from(byHour.entries()).sort((a,b) => a[0]-b[0]).map(([,v]) => v);
+}
+
+// Hourly solar production (kWh) by differentiating cumulative kWh counter
+function hourlySolar(entries, hoursBack, now) {
+  if (!entries || !entries.length) return [];
+  const cutoff = now.getTime() - hoursBack * 3600 * 1000;
+  const byHour = new Map();
+  for (const e of entries) {
+    const t = new Date(e.ts).getTime();
+    if (t < cutoff) continue;
+    const hourKey = Math.floor(t / 3600000);
+    // Keep first + last sample per hour so we can compute the delta
+    const b = byHour.get(hourKey) || { first: e, last: e };
+    b.last = e;
+    if (!byHour.has(hourKey)) b.first = e;
+    byHour.set(hourKey, b);
+  }
+  return Array.from(byHour.entries())
+    .sort((a,b) => a[0]-b[0])
+    .map(([,b]) => Math.max(0, (b.last.solar_energy_total_kwh ?? 0) - (b.first.solar_energy_total_kwh ?? 0)));
+}
+
+// Today's pump-on intervals, returned as [{from:"HH:MM", to:"HH:MM"}]
+function todayPumpSchedule(entries, now) {
+  if (!entries || !entries.length) return [];
+  const dayKey = now.toISOString().slice(0, 10);
+  const tz = now.getTimezoneOffset() * 60000;
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const today = entries.filter(e => {
+    const t = new Date(e.ts).getTime();
+    return t >= startOfDay;
+  });
+  if (!today.length) return [];
+  const runs = [];
+  let runStart = null;
+  for (const e of today) {
+    if (e.pump_on && runStart == null) runStart = e.ts;
+    else if (!e.pump_on && runStart != null) {
+      runs.push({ from: fmtHM(runStart), to: fmtHM(e.ts) });
+      runStart = null;
+    }
+  }
+  if (runStart != null) runs.push({ from: fmtHM(runStart), to: fmtHM(today[today.length-1].ts) });
+  return runs;
+}
+
+function fmtHM(iso) {
+  const d = new Date(iso);
+  return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+}
+
+function safeGet(key, fallback = null) {
+  try { return localStorage.getItem(key) ?? fallback; } catch (_) { return fallback; }
+}
+function safeSet(key, value) {
+  try { localStorage.setItem(key, value); } catch (_) {}
+}
+
+function buildHouseData(status, daily, history, meteo) {
+  const now = new Date();
+  const entries = (history && history.entries) || [];
+  const dailyEntries = (daily && daily.entries) || [];
+
+  // Pool trend = today avg water − yesterday avg water
+  let poolTrend = 0;
+  if (dailyEntries.length >= 2) {
+    const last = dailyEntries[dailyEntries.length - 1];
+    const prev = dailyEntries[dailyEntries.length - 2];
+    if (last.avg_water_c != null && prev.avg_water_c != null) {
+      poolTrend = +(last.avg_water_c - prev.avg_water_c).toFixed(1);
+    }
+  }
+
+  const poolTemp = status && status.temp_water_c != null ? +status.temp_water_c : null;
+  const airTemp  = status && status.temp_air_c   != null ? +status.temp_air_c   : null;
+  const solarW   = status && status.solar_power_w  != null ? +status.solar_power_w : null;
+
+  const pool24 = hourlyBuckets(entries, 24, 'temp_water_c', now);
+  const air24  = hourlyBuckets(entries, 24, 'temp_air_c',  now);
+  const solar24Kwh = hourlySolar(entries, 24, now);
+  const solarCapacity = Math.max(SOLAR_CAPACITY_KW, ...solar24Kwh);
+
+  // Today's solar kWh — prefer last daily_summary entry (today)
+  const todayIso = now.toISOString().slice(0, 10);
+  const todayEntry = dailyEntries.find(e => e.date === todayIso) || dailyEntries[dailyEntries.length - 1];
+
+  const solarToday = todayEntry && todayEntry.solar_kwh_today != null
+    ? +todayEntry.solar_kwh_today
+    : solar24Kwh.reduce((a,b) => a + b, 0);
+
+  // Last 7 days
+  const week = dailyEntries.slice(-7);
+  const weekKwh = week.reduce((a, e) => a + (e.solar_kwh_today || 0), 0);
+  // Current calendar month
+  const monthKey = todayIso.slice(0, 7);
+  const monthKwh = dailyEntries
+    .filter(e => e.date.startsWith(monthKey))
+    .reduce((a, e) => a + (e.solar_kwh_today || 0), 0);
+
+  // Outdoor hi/lo (today from daily_summary) and optional meteo metrics
+  const outHi = todayEntry && todayEntry.max_air_c != null ? Math.round(todayEntry.max_air_c) : (airTemp != null ? Math.round(airTemp) : null);
+  const outLo = todayEntry && todayEntry.min_air_c != null ? Math.round(todayEntry.min_air_c) : null;
+
+  let outdoorExtras = { feels: null, humidity: null, wind: null, windDir: '', uv: null };
+  let forecast = [];
+  if (meteo && meteo.current) {
+    outdoorExtras = {
+      feels: meteo.current.apparent_temperature,
+      humidity: Math.round(meteo.current.relative_humidity_2m),
+      wind: Math.round(meteo.current.wind_speed_10m),
+      windDir: degToCompass(meteo.current.wind_direction_10m),
+      uv: meteo.current.uv_index != null ? Math.round(meteo.current.uv_index) : null,
+    };
+  }
+  if (meteo && meteo.daily && meteo.daily.time) {
+    forecast = meteo.daily.time.slice(0, 7).map((iso, i) => {
+      const d = new Date(iso + 'T12:00:00');
+      return {
+        iso,
+        date: d,
+        hi: Math.round(meteo.daily.temperature_2m_max[i]),
+        lo: Math.round(meteo.daily.temperature_2m_min[i]),
+        icon: wmoToIcon(meteo.daily.weather_code[i]),
+      };
+    });
+  }
+
+  // Filtration: derive today's runs from history; state from status
+  const schedule = todayPumpSchedule(entries, now);
+  const running = !!(status && status.pump_on);
+  const runningRun = running && schedule.length ? schedule[schedule.length - 1] : null;
+  const todayHours = todayEntry && todayEntry.pump_on_minutes != null
+    ? Math.round(todayEntry.pump_on_minutes / 60 * 10) / 10
+    : null;
+
+  // Staleness
+  const updatedAt = status && status.updated_at ? new Date(status.updated_at) : null;
+  const ageMin = updatedAt ? (now - updatedAt) / 60000 : Infinity;
+  const stale = ageMin > STALE_MINUTES;
+
+  // Fake-data friendly fallbacks used only when the real field is missing
+  const lat = parseFloat(safeGet('piscine_lat', '43.79')) || 43.79;
+  const lon = parseFloat(safeGet('piscine_lon', '4.83'))  || 4.83;
+
+  return {
+    location: { name: safeGet('piscine_location', 'Maison'), lat, lon },
+    now,
+    updatedAt, stale,
+    sensorsOk: status ? !!status.sensors_ok : true,
+    reason: status ? (status.reason || '') : '',
+    swimmable: status ? !!status.swimmable : false,
+
+    pool: {
+      temp: poolTemp,
+      trend: poolTrend,
+      target: POOL_TARGET,
+      verdict: poolVerdict(poolTemp),
+      history24: pool24,
     },
-    en: {
-      page_title:        'My Pool',
-      header_title:      '🏊 My Pool',
-      stale_banner:      '⚠️ Cannot verify — data too old',
-      status_loading:    'Loading…',
-      status_analysis:   'Analysing…',
-      status_stale:      'Cannot verify',
-      status_stale_sub:  'Data too old — check HA connection',
-      sensor_fail:       'Sensor unavailable',
-      sensor_fail_sub:   'Check Home Assistant — sensor offline',
-      status_ok:         'Pool ready for swimming!',
-      status_no:         'Not ready for swimming yet',
-      status_no_trigger: '→ Ready at {threshold}°C (+{delta}°C to go)',
-      error_label:       'Loading error',
-      error_sub:         'Check connection and try again',
-      label_water:       'Temperature',
-      label_air:         'Outdoor',
-      label_pump:        'Pump',
-      pump_row:          '🔄 Filter pump',
-      pump_on:           'RUNNING',
-      pump_off:          'OFF',
-      time_now:          'just now',
-      time_min1:         '1 min ago',
-      time_mins:         '{n} min ago',
-      time_h1:           '1 h ago',
-      time_hrs:          '{n} h ago',
-      time_unknown:      'Unknown time',
-      verdict_no_air:    'Outdoor data unavailable',
-      v_perfect_l:       'Perfect day!',
-      v_perfect_s:       'BBQ + pool — everything\'s set!',
-      v_bbq_l:           'Great BBQ weather!',
-      v_bbq_s_soon:      'Pool will be ready soon',
-      v_bbq_s_not:       'Pool not quite ready',
-      v_pool_l:          'Good swim!',
-      v_pool_s:          'A bit cool outside',
-      v_meh_l:           'Decent day',
-      v_meh_s:           'Not really BBQ or pool weather',
-      v_cold_l:          'Be patient…',
-      v_cold_s:          'Summer is coming!',
-      trend_title:       '📈 Trend · 7d',
-      trend_range:       'Min {min}° · Max {max}°',
-      fc_insufficient:   'Insufficient data',
-      fc_stable:         'Stable',
-      fc_stable_s:       '{t}°C — no trend',
-      fc_cooling:        'Cooling down',
-      fc_cooling_s:      '{t}°C — dropping',
-      fc_not_today:      'Not today',
-      fc_not_today_s:    '{t}°C — warming too slowly',
-      fc_ready:          'Ready around {time}',
-      fc_ready_s:        '{t}°C — warming up!',
-      solar_header:      '☀️ Solar',
-      solar_power_label: 'Power',
-      solar_today_label: 'Today',
-      footer:            'Source: Home Assistant',
-      tab_aujourdhui:    'Today',
-      tab_7jours:        '7 days',
-      tab_historique:    'History',
-      sub_saison:        'Season',
-      sub_charts:        'Charts',
-      sub_energie:       'Energy',
-      stat_swim_label:   '🏊 Swim days this season',
-      stat_solar_label:  '☀️ Solar production',
-      stat_swim_unit:    'days',
-      best_water:        'Water record',
-      best_solar:        'Solar record',
-      heatmap_title:     '🗓️ Calendar',
-      hist_temp_title:   '🌡️ Water temperature',
-      hist_solar_title:  '☀️ Solar production',
-      hist_corr_title:   '📊 Air / water correlation',
-      hist_corr_sub:     'For reference only — historical correlation',
-      period_7j:         '7d',
-      period_30j:        '30d',
-      period_90j:        '90d',
-      period_available:  '{n} days available',
-      hist_empty_a:      'Historical data will be available from tomorrow.',
-      hist_empty_b:      'No data for this period. Try 90d or check your HA sensor.',
-      fc_meteo_coords:   'Configure your coordinates in settings',
-      fc_meteo_api:      'Forecast unavailable (API, last: {h}h ago)',
-      fc_meteo_data:     'Insufficient data ({n}/7 days required)',
-      fc_meteo_tmr:      'Tomorrow: {air}°C air → ~{water}°C pool',
-      energie_title:     '💰 Energy',
-      energy_savings_lbl:"Today's savings",
-      energy_season_lbl: 'Season savings',
-      energy_pump_lbl:   'Pump cost (season)',
-      settings_title:    '⚙️ Settings',
-      settings_tariff:   'Tariff (€/kWh)',
-      settings_lat:      'Latitude',
-      settings_lon:      'Longitude',
-      meteo_title:       '🌤️ Tomorrow\'s forecast',
-    }
+
+    outdoor: {
+      temp: airTemp,
+      feels: outdoorExtras.feels,
+      high: outHi, low: outLo,
+      humidity: outdoorExtras.humidity,
+      wind: outdoorExtras.wind,
+      windDir: outdoorExtras.windDir,
+      uv: outdoorExtras.uv,
+      history24: air24,
+      forecast,
+    },
+
+    solar: {
+      nowKw: solarW != null ? +(solarW / 1000).toFixed(2) : null,
+      capacity: +solarCapacity.toFixed(1),
+      todayKwh: +solarToday.toFixed(1),
+      weekKwh: +weekKwh.toFixed(1),
+      monthKwh: +monthKwh.toFixed(1),
+      history24: solar24Kwh,
+    },
+
+    filtration: {
+      state: running ? 'running' : 'idle',
+      runningSince: runningRun ? runningRun.from : null,
+      stopsAt: runningRun ? runningRun.to : null,  // may be "now" when live
+      todayHours,
+      schedule,
+    },
   };
+}
 
-  function t(key, p) {
-    let s = (S[lang] || S.fr)[key] || key;
-    if (p) Object.entries(p).forEach(([k, v]) => { s = s.replace('{' + k + '}', v); });
-    return s;
+async function loadHouseData() {
+  const lat = parseFloat(safeGet('piscine_lat', '43.79')) || 43.79;
+  const lon = parseFloat(safeGet('piscine_lon', '4.83'))  || 4.83;
+  const [status, daily, history, meteo] = await Promise.all([
+    tryFetch('status.json'),
+    tryFetch('daily_summary.json'),
+    tryFetch('history.json'),
+    fetchMeteo(lat, lon),
+  ]);
+  return buildHouseData(status, daily, history, meteo);
+}
+
+window.__dataReady = loadHouseData();
+
+// Stale banner painter (kept in vanilla so it works even if React fails)
+window.__dataReady.then(data => {
+  if (data && data.stale) {
+    const b = document.getElementById('stale-banner');
+    b.classList.add('visible');
+    b.textContent = 'Données non actualisées depuis plus de 15 min';
+  }
+});
+</script>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+
+<script type="text/babel">
+/* ========== UI primitives ========== */
+
+const STATUS = {
+  fr: {
+    pool: {
+      cold:          { title: 'Fraîche',         sub: 'Courageux bienvenus',        tone: 'cool' },
+      'a-bit-fresh': { title: 'Un peu fraîche',  sub: 'Plongeon rapide recommandé', tone: 'cool' },
+      ok:            { title: 'Agréable',        sub: 'À peu près parfaite',        tone: 'ok'   },
+      perfect:       { title: 'Parfaite',        sub: 'Allez hop, à l\u2019eau',    tone: 'ok'   },
+      warm:          { title: 'Tiède',           sub: 'Comme un bain',              tone: 'warm' },
+    },
+    outdoor: { label: 'Extérieur' },
+    solar:   { label: 'Solaire',  live: 'En direct' },
+    filt:    { label: 'Filtration', on: 'En marche', off: 'À l\u2019arrêt', nextDefault: 'Aucune session prévue' },
+    today: 'Aujourd\u2019hui',
+    week:  'Semaine',
+    month: 'Mois',
+    live:  'mis à jour',
+    headerKicker: 'Bulletin du jour',
+    headerTitle1: 'La maison,',
+    headerTitle2: 'aujourd\u2019hui',
+    feels: 'ressenti',
+    target: 'cible',
+    noForecast: 'Prévisions indisponibles',
+    footer: 'Mise à jour toutes les 5 min · capteurs Zigbee',
+    footerEgg: '🏖️ hôte attitré : Florian · servi frais',
+    greeting: (h) => h < 5 ? 'Encore debout' : h < 12 ? 'Bonjour' : h < 18 ? 'Bel après-midi' : h < 22 ? 'Belle soirée' : 'Bonne nuit',
+    pumpSince: (f, t) => `Depuis ${f}, jusqu\u2019à ${t}`,
+    pumpLastRun: (f, t) => `Dernière session ${f}–${t}`,
+    pumpIdle: 'Aucune session aujourd\u2019hui',
+    sensorWarn: 'Capteurs en alerte',
+  },
+  en: {
+    pool: {
+      cold:          { title: 'Cold',        sub: 'Brave souls welcome',  tone: 'cool' },
+      'a-bit-fresh': { title: 'A bit fresh', sub: 'A quick dip, maybe',   tone: 'cool' },
+      ok:            { title: 'Nice',        sub: 'Basically perfect',    tone: 'ok'   },
+      perfect:       { title: 'Perfect',     sub: 'Jump in',              tone: 'ok'   },
+      warm:          { title: 'Warm',        sub: 'Like a bath',          tone: 'warm' },
+    },
+    outdoor: { label: 'Outside' },
+    solar:   { label: 'Solar', live: 'Live' },
+    filt:    { label: 'Pump',  on: 'Running', off: 'Idle', nextDefault: 'No session scheduled' },
+    today: 'Today',
+    week:  'Week',
+    month: 'Month',
+    live:  'updated',
+    headerKicker: 'Today\u2019s brief',
+    headerTitle1: 'The house,',
+    headerTitle2: 'right now',
+    feels: 'feels',
+    target: 'target',
+    noForecast: 'Forecast unavailable',
+    footer: 'Refreshed every 5 min · Zigbee sensors',
+    footerEgg: '🏖️ host: Florian · served chilled',
+    greeting: (h) => h < 5 ? 'Still up' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : h < 22 ? 'Good evening' : 'Good night',
+    pumpSince: (f, t) => `Since ${f}, until ${t}`,
+    pumpLastRun: (f, t) => `Last run ${f}–${t}`,
+    pumpIdle: 'No session today',
+    sensorWarn: 'Sensor fault',
+  },
+};
+
+const Ico = {
+  sun: (s = 28, c = 'currentColor') => (
+    <svg width={s} height={s} viewBox="0 0 32 32" fill="none" stroke={c} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="16" cy="16" r="5.5"/>
+      {Array.from({length:8}).map((_,i) => {
+        const a = i * Math.PI/4;
+        const r1 = 8.5, r2 = 11.5;
+        return <line key={i} x1={16 + Math.cos(a)*r1} y1={16 + Math.sin(a)*r1} x2={16 + Math.cos(a)*r2} y2={16 + Math.sin(a)*r2}/>;
+      })}
+    </svg>
+  ),
+  cloud: (s = 28, c = 'currentColor') => (
+    <svg width={s} height={s} viewBox="0 0 32 32" fill="none" stroke={c} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 22c-3 0-5-2.2-5-5s2.2-5 5-5c.3 0 .6 0 .9.1C10.5 9.2 13 7 16 7c3.7 0 6.7 2.9 7 6.6 2.3.4 4 2.4 4 4.9 0 2.8-2.2 5-5 5H9Z"/>
+    </svg>
+  ),
+  cloudSun: (s = 28, c = 'currentColor') => (
+    <svg width={s} height={s} viewBox="0 0 32 32" fill="none" stroke={c} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="3.5"/>
+      <line x1="11" y1="5" x2="11" y2="3.5"/><line x1="11" y1="18.5" x2="11" y2="17"/>
+      <line x1="4.5" y1="11" x2="6" y2="11"/><line x1="16" y1="11" x2="17.5" y2="11"/>
+      <line x1="6.5" y1="6.5" x2="7.5" y2="7.5"/><line x1="14.5" y1="14.5" x2="15.5" y2="15.5"/>
+      <path d="M13 23c-2.5 0-4.3-1.8-4.3-4.2 0-.3 0-.5.1-.8-.4-.1-.8-.1-1.1-.1-2.6 0-4.7 2-4.7 4.6s2.1 4.5 4.7 4.5h12.2c2.4 0 4.4-1.9 4.4-4.3 0-2.2-1.7-4-4-4.3-.3-2.8-2.7-5-5.7-5-1.6 0-3 .7-4 1.7"/>
+    </svg>
+  ),
+  rain: (s = 28, c = 'currentColor') => (
+    <svg width={s} height={s} viewBox="0 0 32 32" fill="none" stroke={c} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 18c-3 0-5-2.2-5-5s2.2-5 5-5c.3 0 .6 0 .9.1C10.5 5.2 13 3 16 3c3.7 0 6.7 2.9 7 6.6 2.3.4 4 2.4 4 4.9 0 2.8-2.2 5-5 5H9Z"/>
+      <line x1="11" y1="22" x2="9" y2="26"/>
+      <line x1="16" y1="22" x2="14" y2="26"/>
+      <line x1="21" y1="22" x2="19" y2="26"/>
+    </svg>
+  ),
+  wind: (s = 22, c = 'currentColor') => (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 8h13a3 3 0 100-6"/><path d="M3 16h17a3 3 0 110 6"/><path d="M3 12h8"/>
+    </svg>
+  ),
+  drop: (s = 22, c = 'currentColor') => (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3c0 0-7 7.5-7 12a7 7 0 0014 0c0-4.5-7-12-7-12z"/>
+    </svg>
+  ),
+  uv: (s = 22, c = 'currentColor') => (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="4"/>
+      {[0,60,120,180,240,300].map(d => {
+        const a = d * Math.PI/180; const r1 = 6.5, r2 = 9.5;
+        return <line key={d} x1={12+Math.cos(a)*r1} y1={12+Math.sin(a)*r1} x2={12+Math.cos(a)*r2} y2={12+Math.sin(a)*r2}/>;
+      })}
+    </svg>
+  ),
+  arrowUp:   (s = 12, c = 'currentColor') => <svg width={s} height={s} viewBox="0 0 12 12" fill="none" stroke={c} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M6 10V2M3 5l3-3 3 3"/></svg>,
+  arrowDown: (s = 12, c = 'currentColor') => <svg width={s} height={s} viewBox="0 0 12 12" fill="none" stroke={c} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2v8M3 7l3 3 3-3"/></svg>,
+  pump: (s = 18, c = 'currentColor') => (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="5"/>
+      <path d="M12 7v5l3 2"/>
+    </svg>
+  ),
+  leaf: (s = 16, c = 'currentColor') => (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 4c-9 0-14 4.5-14 11 0 2 .5 3.5 1.5 5 5-1 13-4 12.5-16z"/>
+      <path d="M7.5 20c2-5 6-8 11-9"/>
+    </svg>
+  ),
+  alert: (s = 14, c = 'currentColor') => (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3 2 21h20L12 3z"/><path d="M12 10v5"/><circle cx="12" cy="18" r="0.6" fill={c}/>
+    </svg>
+  ),
+};
+
+function getIcon(name, s, c) {
+  switch (name) {
+    case 'sun': return Ico.sun(s, c);
+    case 'cloud': return Ico.cloud(s, c);
+    case 'cloud-sun': return Ico.cloudSun(s, c);
+    case 'rain': return Ico.rain(s, c);
+    default: return Ico.sun(s, c);
+  }
+}
+
+function AnimatedNumber({ value, decimals = 1, suffix = '', duration = 1400 }) {
+  const [v, setV] = React.useState(0);
+  const rafRef = React.useRef();
+  React.useEffect(() => {
+    if (value == null || !Number.isFinite(value)) { setV(0); return; }
+    const start = performance.now();
+    const tick = (t) => {
+      const p = Math.min(1, (t - start) / duration);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setV(value * eased);
+      if (p < 1) rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [value, duration]);
+  if (value == null || !Number.isFinite(value)) return <span className="num">—</span>;
+  return <span className="num">{v.toFixed(decimals)}{suffix}</span>;
+}
+
+function LiveDot({ color = '#6fb9ff', size = 7 }) {
+  return (
+    <span style={{ position: 'relative', display: 'inline-block', width: size, height: size }}>
+      <span style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: color, animation: 'ripple 1.8s ease-out infinite' }}/>
+      <span style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: color }}/>
+    </span>
+  );
+}
+
+function Card({ children, onClick, style, label }) {
+  return (
+    <div
+      onClick={onClick}
+      aria-label={label}
+      style={{
+        position: 'relative',
+        background: 'linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.015))',
+        border: '1px solid var(--line)',
+        borderRadius: 22,
+        padding: 18,
+        cursor: onClick ? 'pointer' : 'default',
+        transition: 'border-color 0.3s, transform 0.3s',
+        overflow: 'hidden',
+        ...style,
+      }}>
+      {children}
+    </div>
+  );
+}
+
+function MicroLabel({ children, style }) {
+  return (
+    <span style={{
+      fontFamily: 'JetBrains Mono, monospace',
+      fontSize: 10.5,
+      letterSpacing: '0.18em',
+      textTransform: 'uppercase',
+      color: 'var(--ink-faint)',
+      ...style,
+    }}>{children}</span>
+  );
+}
+
+/* ========== Chart primitives ========== */
+
+function Sparkline({ data, width = 300, height = 48, color = '#6fb9ff', fill = true, strokeWidth = 1.6 }) {
+  if (!data || data.length < 2) return <div style={{ height, color: 'var(--ink-faint)', fontSize: 11, fontFamily: 'JetBrains Mono, monospace', textAlign: 'center' }}>—</div>;
+  const min = Math.min(...data), max = Math.max(...data);
+  const range = max - min || 1;
+  const step = width / (data.length - 1);
+  const points = data.map((v, i) => [i * step, height - ((v - min) / range) * (height - 6) - 3]);
+  const d = points.map((p, i) => (i === 0 ? `M${p[0]},${p[1]}` : `L${p[0]},${p[1]}`)).join(' ');
+  const area = `${d} L${width},${height} L0,${height} Z`;
+  const uid = React.useId();
+  return (
+    <svg width="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" style={{ display: 'block', overflow: 'visible' }}>
+      {fill && (
+        <>
+          <defs>
+            <linearGradient id={`spg-${uid}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor={color} stopOpacity="0.28"/>
+              <stop offset="1" stopColor={color} stopOpacity="0"/>
+            </linearGradient>
+          </defs>
+          <path d={area} fill={`url(#spg-${uid})`}/>
+        </>
+      )}
+      <path d={d} fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round"/>
+      <circle cx={points[points.length-1][0]} cy={points[points.length-1][1]} r={3} fill={color}/>
+    </svg>
+  );
+}
+
+function HourBars({ data, color = '#f5b872', height = 110, nowHour }) {
+  const safe = data && data.length ? data : Array(24).fill(0);
+  const max = Math.max(...safe) || 1;
+  return (
+    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height, width: '100%' }}>
+      {safe.map((v, i) => {
+        const h = Math.max(2, (v / max) * (height - 10));
+        const active = i === safe.length - 1 || i === nowHour;
+        return (
+          <div key={i} style={{
+            flex: 1, height: h,
+            background: active ? color : `${color}66`,
+            borderRadius: 2,
+            transformOrigin: 'bottom',
+            animation: `grow-up 0.9s cubic-bezier(.2,.7,.2,1) ${i*0.015}s both`,
+          }}/>
+        );
+      })}
+    </div>
+  );
+}
+
+function FiltrationStrip({ schedule, nowHour }) {
+  const parse = s => parseInt(s.split(':')[0], 10) + parseInt(s.split(':')[1], 10)/60;
+  return (
+    <div style={{ position: 'relative', height: 30, background: 'rgba(255,255,255,0.04)', borderRadius: 8, overflow: 'hidden' }}>
+      {Array.from({length: 25}).map((_,i) => i % 6 === 0 && (
+        <div key={i} style={{
+          position: 'absolute', top: 0, bottom: 0,
+          left: `${(i/24)*100}%`,
+          width: 1, background: 'rgba(255,255,255,0.06)',
+        }}/>
+      ))}
+      {(schedule || []).map((r, i) => {
+        const from = parse(r.from), to = parse(r.to);
+        const left = (from/24)*100, width = Math.max(0.5, ((to-from)/24)*100);
+        return (
+          <div key={i} style={{
+            position: 'absolute', top: 4, bottom: 4,
+            left: `${left}%`, width: `${width}%`,
+            background: 'linear-gradient(90deg, rgba(111,185,255,0.35), rgba(111,185,255,0.55))',
+            borderRadius: 4,
+            boxShadow: '0 0 20px rgba(111,185,255,0.25)',
+          }}/>
+        );
+      })}
+      <div style={{ position: 'absolute', top: -2, bottom: -2, left: `${(nowHour/24)*100}%`, width: 1.5, background: '#fff', boxShadow: '0 0 8px rgba(255,255,255,0.6)' }}/>
+      <div style={{ position: 'absolute', top: -4, left: `calc(${(nowHour/24)*100}% - 4px)`, width: 8, height: 8, borderRadius: '50%', background: '#fff' }}/>
+    </div>
+  );
+}
+
+function Radial({ value, max, size = 140, stroke = 10, color = '#6fb9ff', trackColor = 'rgba(255,255,255,0.06)', children }) {
+  const r = size/2 - stroke/2 - 2;
+  const c = 2 * Math.PI * r;
+  const pct = Math.min(1, Math.max(0, (value || 0) / (max || 1)));
+  return (
+    <div style={{ position: 'relative', width: size, height: size, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+      <svg width={size} height={size} style={{ position: 'absolute', inset: 0, transform: 'rotate(-90deg)' }}>
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={trackColor} strokeWidth={stroke}/>
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={stroke}
+          strokeLinecap="round"
+          strokeDasharray={c} strokeDashoffset={c * (1 - pct)}
+          style={{ transition: 'stroke-dashoffset 1.4s cubic-bezier(.2,.7,.2,1)' }}/>
+      </svg>
+      <div style={{ position: 'relative', textAlign: 'center' }}>{children}</div>
+    </div>
+  );
+}
+
+/* ========== Cards ========== */
+
+function PoolHero({ data, t, expanded, onExpand }) {
+  const status = t.pool[data.verdict];
+  const toneColor = status.tone === 'warm' ? '#f5b872' : status.tone === 'cool' ? '#6fb9ff' : '#9fd8c7';
+  const hasTemp = data.temp != null && Number.isFinite(data.temp);
+
+  return (
+    <Card onClick={onExpand} style={{ padding: 22 }}>
+      <div aria-hidden style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none',
+        background: `radial-gradient(60% 60% at 70% 40%, ${toneColor}18, transparent 70%)`,
+      }}/>
+      <div aria-hidden style={{ position: 'absolute', top: 24, right: 22, width: 120, height: 120, pointerEvents: 'none' }}>
+        {[0, 0.6, 1.2].map((d,i) => (
+          <div key={i} style={{
+            position: 'absolute', inset: 0, borderRadius: '50%',
+            border: `1px solid ${toneColor}`,
+            animation: `ripple 3.6s ease-out ${d}s infinite`,
+            opacity: 0.5,
+          }}/>
+        ))}
+        <div style={{
+          position: 'absolute', inset: '36%', borderRadius: '50%',
+          background: `radial-gradient(circle, ${toneColor}88, ${toneColor}22)`,
+          animation: 'breathe 4s ease-in-out infinite',
+          filter: 'blur(6px)',
+        }}/>
+      </div>
+
+      <div style={{ position: 'relative' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 22 }}>
+          <div>
+            <MicroLabel>Piscine</MicroLabel>
+            <div className="serif" style={{ fontSize: 24, fontWeight: 400, marginTop: 6, letterSpacing: 0.2 }}>
+              {status.title}
+            </div>
+            <div style={{ fontSize: 13, color: 'var(--ink-dim)', marginTop: 2 }}>
+              {status.sub}
+            </div>
+          </div>
+          {data.trend !== 0 && (
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              padding: '5px 10px', borderRadius: 999,
+              background: `${toneColor}18`, border: `1px solid ${toneColor}30`,
+              color: toneColor,
+              fontSize: 11, fontFamily: 'JetBrains Mono, monospace', letterSpacing: '0.06em',
+            }}>
+              {data.trend > 0 ? Ico.arrowUp(10, toneColor) : Ico.arrowDown(10, toneColor)}
+              <span className="num">{Math.abs(data.trend).toFixed(1)}°</span>
+            </div>
+          )}
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginTop: 10 }}>
+          <span className="serif num" style={{ fontSize: 96, fontWeight: 400, letterSpacing: -2, lineHeight: 1, color: '#fff' }}>
+            {hasTemp ? <AnimatedNumber value={data.temp} decimals={1}/> : '—'}
+          </span>
+          <span className="serif" style={{ fontSize: 40, fontWeight: 400, color: 'var(--ink-dim)' }}>°</span>
+        </div>
+
+        <div style={{ marginTop: 18, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ flex: 1, height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 999, position: 'relative' }}>
+            <div style={{
+              position: 'absolute', left: 0, top: 0, bottom: 0,
+              width: `${Math.min(100, ((hasTemp ? data.temp : 0) / 32) * 100)}%`,
+              background: `linear-gradient(90deg, ${toneColor}, ${toneColor}dd)`,
+              borderRadius: 999,
+              animation: 'grow-up 1.2s ease-out both',
+              transformOrigin: 'left',
+            }}/>
+            <div style={{
+              position: 'absolute', left: `${(data.target/32)*100}%`, top: -3, bottom: -3,
+              width: 1.5, background: 'rgba(255,255,255,0.25)',
+            }}/>
+          </div>
+          <span style={{ fontSize: 10, color: 'var(--ink-faint)', fontFamily: 'JetBrains Mono, monospace' }}>{t.target} {data.target}°</span>
+        </div>
+
+        <div style={{ marginTop: 14, opacity: 0.85 }}>
+          <Sparkline data={data.history24} width={340} height={36} color={toneColor} strokeWidth={1.2}/>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function OutdoorCard({ data, t, lang }) {
+  const hasTemp = data.temp != null && Number.isFinite(data.temp);
+  const hasForecast = data.forecast && data.forecast.length > 0;
+  const hasExtras = data.humidity != null || data.wind != null || data.uv != null;
+
+  return (
+    <Card>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <MicroLabel>{t.outdoor.label}</MicroLabel>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 2, marginTop: 10 }}>
+            <span className="serif num" style={{ fontSize: 46, fontWeight: 400, letterSpacing: -0.5, lineHeight: 1 }}>
+              {hasTemp ? <AnimatedNumber value={data.temp} decimals={1}/> : '—'}
+            </span>
+            <span className="serif" style={{ fontSize: 22, color: 'var(--ink-dim)' }}>°</span>
+          </div>
+          {data.feels != null && (
+            <div style={{ fontSize: 12, color: 'var(--ink-dim)', marginTop: 4 }}>
+              {t.feels} <span className="num">{(+data.feels).toFixed(1)}°</span>
+            </div>
+          )}
+          {data.high != null && data.low != null && (
+            <div style={{ fontSize: 11, color: 'var(--ink-faint)', marginTop: 4, fontFamily: 'JetBrains Mono, monospace' }}>
+              <span className="num">{data.high}°</span> / <span className="num">{data.low}°</span>
+            </div>
+          )}
+        </div>
+        <div style={{ color: '#f5b872', marginTop: 4 }}>
+          {getIcon(hasForecast ? data.forecast[0].icon : 'sun', 42, '#f5b872')}
+        </div>
+      </div>
+
+      {hasForecast && (
+        <div style={{ display: 'flex', gap: 8, marginTop: 18, justifyContent: 'space-between' }}>
+          {data.forecast.slice(0, 5).map((d, i) => (
+            <div key={i} style={{
+              flex: 1, textAlign: 'center',
+              padding: '10px 4px',
+              borderRadius: 12,
+              background: i === 0 ? 'rgba(245,184,114,0.08)' : 'transparent',
+              border: i === 0 ? '1px solid rgba(245,184,114,0.18)' : '1px solid transparent',
+            }}>
+              <div style={{ fontSize: 10, color: 'var(--ink-faint)', fontFamily: 'JetBrains Mono, monospace', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                {i === 0 ? (lang === 'fr' ? 'Auj.' : 'Today') : shortDayForLang(d.date, lang)}
+              </div>
+              <div style={{ margin: '6px 0', display: 'flex', justifyContent: 'center', color: d.icon === 'sun' ? '#f5b872' : d.icon === 'rain' ? '#6fb9ff' : 'var(--ink-dim)' }}>
+                {getIcon(d.icon, 20)}
+              </div>
+              <div style={{ fontSize: 12 }} className="num">{d.hi}°</div>
+              <div style={{ fontSize: 11, color: 'var(--ink-faint)' }} className="num">{d.lo}°</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {hasExtras && (
+        <div style={{ display:'flex', justifyContent:'space-between', marginTop: 14, fontSize: 11, color: 'var(--ink-dim)', fontFamily: 'JetBrains Mono, monospace', flexWrap: 'wrap', gap: 8 }}>
+          {data.humidity != null && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>{Ico.drop(12)} {data.humidity}%</span>}
+          {data.wind != null && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>{Ico.wind(12)} {data.wind} km/h {data.windDir}</span>}
+          {data.uv != null && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>{Ico.uv(12)} UV {data.uv}</span>}
+        </div>
+      )}
+    </Card>
+  );
+}
+
+// Helper used in OutdoorCard for forecast day labels
+function shortDayForLang(date, lang) {
+  const fr = ['Dim.','Lun.','Mar.','Mer.','Jeu.','Ven.','Sam.'];
+  const en = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  return (lang === 'fr' ? fr : en)[date.getDay()];
+}
+
+function SolarCard({ data, t, lang, nowHour }) {
+  const hasNow = data.nowKw != null && Number.isFinite(data.nowKw);
+  const pct = hasNow ? (data.nowKw / data.capacity) * 100 : 0;
+  return (
+    <Card>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <MicroLabel>{t.solar.label}</MicroLabel>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: '#f5b872', fontSize: 10, fontFamily: 'JetBrains Mono, monospace', letterSpacing: '0.1em' }}>
+              <LiveDot color="#f5b872" size={6}/> {t.solar.live.toUpperCase()}
+            </span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginTop: 10 }}>
+            <span className="serif num" style={{ fontSize: 46, fontWeight: 400, letterSpacing: -0.5, lineHeight: 1, color: '#f5b872' }}>
+              {hasNow ? <AnimatedNumber value={data.nowKw} decimals={2}/> : '—'}
+            </span>
+            <span className="serif" style={{ fontSize: 18, color: 'var(--ink-dim)' }}>kW</span>
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--ink-faint)', marginTop: 2, fontFamily: 'JetBrains Mono, monospace' }}>
+            / {data.capacity} kW {lang === 'fr' ? 'crête' : 'peak'}
+          </div>
+        </div>
+        <div style={{ marginTop: -4 }}>
+          <Radial value={data.nowKw} max={data.capacity} size={72} stroke={6} color="#f5b872">
+            <div style={{ fontSize: 14, fontFamily: 'JetBrains Mono, monospace', color: '#f5b872' }} className="num">
+              {hasNow ? Math.round(pct) : 0}%
+            </div>
+          </Radial>
+        </div>
+      </div>
+
+      <div style={{ marginTop: 16 }}>
+        <HourBars data={data.history24} color="#f5b872" height={72} nowHour={nowHour}/>
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--line)', fontSize: 12 }}>
+        <div>
+          <div style={{ color: 'var(--ink-faint)', fontSize: 10, fontFamily: 'JetBrains Mono, monospace', letterSpacing: '0.1em', textTransform: 'uppercase' }}>{t.today}</div>
+          <div className="num" style={{ marginTop: 2, fontSize: 14 }}>{data.todayKwh} kWh</div>
+        </div>
+        <div>
+          <div style={{ color: 'var(--ink-faint)', fontSize: 10, fontFamily: 'JetBrains Mono, monospace', letterSpacing: '0.1em', textTransform: 'uppercase' }}>{t.week}</div>
+          <div className="num" style={{ marginTop: 2, fontSize: 14 }}>{data.weekKwh} kWh</div>
+        </div>
+        <div>
+          <div style={{ color: 'var(--ink-faint)', fontSize: 10, fontFamily: 'JetBrains Mono, monospace', letterSpacing: '0.1em', textTransform: 'uppercase' }}>{t.month}</div>
+          <div className="num" style={{ marginTop: 2, fontSize: 14 }}>{data.monthKwh} kWh</div>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function FiltrationCard({ data, t, lang, nowHour }) {
+  const running = data.state === 'running';
+  let sub;
+  if (running && data.runningSince && data.stopsAt) {
+    sub = t.pumpSince(data.runningSince, data.stopsAt);
+  } else if (!running && data.schedule && data.schedule.length) {
+    const last = data.schedule[data.schedule.length - 1];
+    sub = t.pumpLastRun(last.from, last.to);
+  } else {
+    sub = t.pumpIdle;
+  }
+  return (
+    <Card>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <MicroLabel>{t.filt.label}</MicroLabel>
+          <div className="serif" style={{ fontSize: 24, fontWeight: 400, marginTop: 10, letterSpacing: 0.2 }}>
+            {running ? t.filt.on : t.filt.off}
+          </div>
+          <div style={{ fontSize: 12, color: 'var(--ink-dim)', marginTop: 4 }}>
+            {sub}
+          </div>
+        </div>
+        <div style={{
+          width: 44, height: 44, borderRadius: '50%',
+          background: running ? 'rgba(111,185,255,0.12)' : 'rgba(255,255,255,0.04)',
+          border: `1px solid ${running ? 'rgba(111,185,255,0.3)' : 'var(--line)'}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: running ? '#6fb9ff' : 'var(--ink-faint)',
+          animation: running ? 'spin-slow 10s linear infinite' : 'none',
+        }}>
+          {Ico.pump(22, running ? '#6fb9ff' : 'rgba(233,241,247,0.38)')}
+        </div>
+      </div>
+
+      <div style={{ marginTop: 16 }}>
+        <FiltrationStrip schedule={data.schedule} nowHour={nowHour}/>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 10, color: 'var(--ink-faint)', fontFamily: 'JetBrains Mono, monospace' }}>
+          <span>00h</span><span>06h</span><span>12h</span><span>18h</span><span>24h</span>
+        </div>
+      </div>
+
+      {data.todayHours != null && (
+        <div style={{ marginTop: 12, display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
+          <span style={{ color: 'var(--ink-dim)' }}>{t.today}</span>
+          <span className="num" style={{ color: 'var(--ink)' }}>{data.todayHours}h</span>
+        </div>
+      )}
+    </Card>
+  );
+}
+
+function TickerStat({ label, value, suffix = '', decimals = 1, color }) {
+  const has = value != null && Number.isFinite(value);
+  return (
+    <div>
+      <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--ink-faint)' }}>
+        {label}
+      </div>
+      <div className="serif num" style={{ fontSize: 26, fontWeight: 400, letterSpacing: 0, marginTop: 4, color }}>
+        {has ? <AnimatedNumber value={value} decimals={decimals}/> : '—'}
+        <span style={{ fontSize: 13, color: 'var(--ink-dim)' }}>{suffix}</span>
+      </div>
+    </div>
+  );
+}
+
+function Footer({ t }) {
+  const [egg, setEgg] = React.useState(false);
+  return (
+    <div style={{ marginTop: 40, paddingTop: 20, borderTop: '1px solid var(--line)', textAlign: 'center', fontSize: 11, color: 'var(--ink-faint)', fontFamily: 'JetBrains Mono, monospace' }}>
+      <div onClick={() => setEgg(e => !e)} style={{ cursor: 'pointer' }}>
+        {egg ? t.footerEgg : t.footer}
+      </div>
+    </div>
+  );
+}
+
+function SensorWarn({ t, reason }) {
+  return (
+    <div style={{
+      margin: '0 0 14px',
+      padding: '10px 12px',
+      border: '1px solid rgba(245,184,114,0.3)',
+      background: 'rgba(245,184,114,0.08)',
+      color: '#f5b872',
+      borderRadius: 12,
+      fontSize: 12,
+      display: 'flex', alignItems: 'center', gap: 10,
+    }}>
+      <span style={{ flex: '0 0 auto' }}>{Ico.alert(16, '#f5b872')}</span>
+      <span style={{ color: 'var(--ink)' }}>
+        {t.sensorWarn}{reason ? <span style={{ color: 'var(--ink-dim)' }}> — {reason}</span> : null}
+      </span>
+    </div>
+  );
+}
+
+/* ========== Horizon variation shell ========== */
+
+function HorizonView({ data, lang, t, nowHour }) {
+  const dateStr = data.now.toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US', { weekday: 'long', day: 'numeric', month: 'long' });
+  const timeStr = data.now.toLocaleTimeString(lang === 'fr' ? 'fr-FR' : 'en-US', { hour: '2-digit', minute: '2-digit' });
+  const updatedStr = data.updatedAt
+    ? data.updatedAt.toLocaleTimeString(lang === 'fr' ? 'fr-FR' : 'en-US', { hour: '2-digit', minute: '2-digit' })
+    : '—';
+
+  return (
+    <div style={{ padding: '44px 18px 60px', maxWidth: 440, margin: '0 auto' }}>
+      <div aria-hidden style={{
+        position: 'fixed', inset: 0, zIndex: -1,
+        background: `linear-gradient(180deg, #06101c 0%, #05090e 55%, #0a0f16 100%)`,
+      }}/>
+
+      {/* Masthead */}
+      <div className="rise" style={{ borderBottom: '1px solid var(--line-strong)', paddingBottom: 18, marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+        <div>
+          <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--ink-faint)' }}>
+            № 01 — {dateStr}
+          </div>
+          <div className="serif" style={{ fontSize: 30, fontWeight: 400, letterSpacing: 0.2, marginTop: 6, lineHeight: 1.1 }}>
+            {t.headerTitle1}<br/>
+            <span style={{ color: 'var(--ink-dim)' }}>{t.headerTitle2}</span>
+          </div>
+        </div>
+        <div style={{ textAlign: 'right', fontFamily: 'JetBrains Mono, monospace', fontSize: 11, color: 'var(--ink-faint)' }}>
+          <div className="num" style={{ color: 'var(--ink)', fontSize: 13 }}>{timeStr}</div>
+          <div className="num">{data.location.lat.toFixed(2)}°N</div>
+          <div className="num">{data.location.lon.toFixed(2)}°E</div>
+        </div>
+      </div>
+
+      {/* Live ticker */}
+      <div className="rise" style={{ animationDelay: '0.1s', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20, padding: '14px 0', borderBottom: '1px solid var(--line)' }}>
+        <TickerStat label="Piscine" value={data.pool.temp}   suffix="°"  color="#6fb9ff"/>
+        <TickerStat label={lang === 'fr' ? 'Ext.' : 'Out.'} value={data.outdoor.temp} suffix="°" color="#f5b872"/>
+        <TickerStat label="Solaire" value={data.solar.nowKw} suffix="kW" decimals={2} color="#9fd8c7"/>
+      </div>
+
+      {/* Freshness line */}
+      <div className="rise" style={{ animationDelay: '0.12s', display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--ink-faint)', fontFamily: 'JetBrains Mono, monospace', marginBottom: 18 }}>
+        <LiveDot color={data.stale ? '#f5b872' : '#9fd8c7'} size={5}/>
+        <span>{t.live} {updatedStr}</span>
+      </div>
+
+      {!data.sensorsOk && <SensorWarn t={t} reason={data.reason}/>}
+
+      <div className="rise" style={{ animationDelay: '0.15s' }}>
+        <PoolHero data={data.pool} t={t}/>
+      </div>
+      <div className="rise" style={{ marginTop: 12, animationDelay: '0.25s' }}>
+        <SolarCard data={data.solar} t={t} lang={lang} nowHour={nowHour}/>
+      </div>
+      <div className="rise" style={{ marginTop: 12, animationDelay: '0.35s' }}>
+        <OutdoorCard data={data.outdoor} t={t} lang={lang}/>
+      </div>
+      <div className="rise" style={{ marginTop: 12, animationDelay: '0.45s' }}>
+        <FiltrationCard data={data.filtration} t={t} lang={lang} nowHour={nowHour}/>
+      </div>
+
+      <Footer t={t}/>
+    </div>
+  );
+}
+
+/* ========== Top-level App ========== */
+
+function safeGetLS(key, fallback = null) {
+  try { return localStorage.getItem(key) ?? fallback; } catch (_) { return fallback; }
+}
+function safeSetLS(key, value) {
+  try { localStorage.setItem(key, value); } catch (_) {}
+}
+
+function App() {
+  const [data, setData] = React.useState(null);
+  const [lang, setLang] = React.useState(() => safeGetLS('mp-lang') || (navigator.language && navigator.language.startsWith('en') ? 'en' : 'fr'));
+
+  React.useEffect(() => { safeSetLS('mp-lang', lang); }, [lang]);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    window.__dataReady.then(d => { if (!cancelled) setData(d); });
+    // Refresh every 5 minutes
+    const id = setInterval(() => {
+      window.loadHouseData && window.loadHouseData().then(d => { if (!cancelled) setData(d); });
+    }, 5 * 60 * 1000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, []);
+
+  const t = STATUS[lang];
+
+  if (!data) {
+    return <div className="boot">Chargement</div>;
   }
 
-  // ============================================================
-  // PiscineMonitoring — data sources + localStorage keys
-  // ============================================================
-  // Data files:
-  //   status.json        — live pool state (overwritten every dispatch, not committed)
-  //   history.json       — rolling 7-day window, 2016 entries, 5-min cadence
-  //   daily_summary.json — one entry/day, grows ~20KB/year
-  //
-  // localStorage keys:
-  //   lastStatus         — cached status.json for offline fallback
-  //   piscine_tab        — active top-level tab (aujourdhui / 7jours / historique)
-  //   piscine_sub_tab    — active Historique sub-tab (saison / charts / energie)
-  //   piscine_tariff     — energy tariff in €/kWh (default: 0.22)
-  //   piscine_lat        — pool latitude in decimal degrees (e.g. 48.8566)
-  //   piscine_lon        — pool longitude in decimal degrees (e.g. 2.3522)
-  //   openmeteo_forecast — cached Open-Meteo response JSON + cached_at timestamp
-  // ============================================================
-
-  // Safe localStorage wrappers — prevent QuotaExceededError in Safari Private Mode
-  function safeGet(key, fallback = null) {
-    try { return localStorage.getItem(key) ?? fallback; } catch (_) { return fallback; }
-  }
-  function safeSet(key, value) {
-    try { localStorage.setItem(key, value); } catch (_) {}
-  }
-
-  function initUI() {
-    document.title = t('page_title');
-    document.getElementById('header-title').textContent      = t('header_title');
-    document.getElementById('stale-banner').textContent      = t('stale_banner');
-    document.getElementById('status-label').textContent      = t('status_loading');
-    document.getElementById('verdict-label').textContent     = t('status_analysis');
-    document.getElementById('metric-label-temp').textContent = t('label_water');
-    document.getElementById('metric-label-air').textContent  = t('label_air');
-    document.getElementById('metric-label-pump').textContent = t('label_pump');
-    document.getElementById('trend-title').textContent       = t('trend_title');
-    document.getElementById('pump-label').textContent        = t('pump_row');
-    document.getElementById('solar-header').textContent      = t('solar_header');
-    document.getElementById('solar-power-label').textContent = t('solar_power_label');
-    document.getElementById('solar-today-label').textContent = t('solar_today_label');
-    document.getElementById('footer').textContent            = t('footer');
-    // Tabs
-    document.getElementById('tab-btn-aujourdhui').textContent  = t('tab_aujourdhui');
-    document.getElementById('tab-btn-7jours').textContent      = t('tab_7jours');
-    document.getElementById('tab-btn-historique').textContent  = t('tab_historique');
-    document.getElementById('sub-btn-saison').textContent      = t('sub_saison');
-    document.getElementById('sub-btn-charts').textContent      = t('sub_charts');
-    document.getElementById('sub-btn-energie').textContent     = t('sub_energie');
-    // Historique labels
-    document.getElementById('stat-swim-unit').textContent      = t('stat_swim_unit');
-    document.getElementById('stat-swim-label').textContent     = t('stat_swim_label');
-    document.getElementById('stat-solar-kwh-label').textContent= t('stat_solar_label');
-    document.getElementById('temp-chart-title').textContent    = t('hist_temp_title');
-    document.getElementById('solar-chart-title').textContent   = t('hist_solar_title');
-    document.getElementById('corr-title').textContent          = t('hist_corr_title');
-    document.getElementById('corr-disclaimer').textContent     = t('hist_corr_sub');
-    document.getElementById('energie-title').textContent       = t('energie_title');
-    document.getElementById('meteo-forecast-title').textContent= t('meteo_title');
-    document.getElementById('hist-empty-a').textContent        = t('hist_empty_a');
-    // Settings drawer labels
-    document.getElementById('settings-title').textContent      = t('settings_title');
-    document.getElementById('settings-tariff-label').textContent = t('settings_tariff');
-    document.getElementById('settings-lat-label').textContent  = t('settings_lat');
-    document.getElementById('settings-lon-label').textContent  = t('settings_lon');
-  }
-
-  // ── Core ──────────────────────────────────────────────────────────────────
-  const STALE_THRESHOLD_MS = 15 * 60 * 1000;
-  const SWIM_TEMP_C = 24;
-
-  function computeVerdict(tempAir, tempWater, swimmable, pumpOn) {
-    if (isNaN(tempAir)) return { cls: 'meh', emoji: '🤔', label: t('verdict_no_air'), sub: '' };
-    const bbqOk = tempAir >= 22, poolSoon = pumpOn && tempWater >= 18;
-    if (bbqOk && swimmable) return { cls: 'perfect', emoji: '🎉', label: t('v_perfect_l'), sub: t('v_perfect_s') };
-    if (bbqOk && poolSoon)  return { cls: 'bbq',     emoji: '🔥', label: t('v_bbq_l'),    sub: t('v_bbq_s_soon') };
-    if (bbqOk)              return { cls: 'bbq',     emoji: '🔥', label: t('v_bbq_l'),    sub: t('v_bbq_s_not') };
-    if (swimmable)          return { cls: 'pool',    emoji: '🏊', label: t('v_pool_l'),   sub: t('v_pool_s') };
-    if (tempAir >= 18)      return { cls: 'meh',     emoji: '⛅', label: t('v_meh_l'),    sub: t('v_meh_s') };
-    return                         { cls: 'cold',    emoji: '❄️', label: t('v_cold_l'),   sub: t('v_cold_s') };
-  }
-
-  function timeAgo(dateStr) {
-    const diff = Date.now() - new Date(dateStr).getTime();
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1)  return t('time_now');
-    if (mins === 1) return t('time_min1');
-    if (mins < 60) return t('time_mins', { n: mins });
-    const hrs = Math.floor(mins / 60);
-    if (hrs === 1) return t('time_h1');
-    return t('time_hrs', { n: hrs });
-  }
-
-  function applyData(d) {
-    const updatedAt = d.updated_at ? new Date(d.updated_at) : null;
-    const isStale = !updatedAt || (Date.now() - updatedAt.getTime() > STALE_THRESHOLD_MS);
-
-    if (isStale) {
-      document.getElementById('stale-banner').classList.add('visible');
-      const card = document.getElementById('status-card');
-      card.className = 'status-card stale';
-      document.getElementById('status-icon').textContent  = '🔴';
-      document.getElementById('status-label').textContent = t('status_stale');
-      document.getElementById('status-reason').textContent = t('status_stale_sub');
-      document.getElementById('status-trigger').textContent = '';
-    } else {
-      document.getElementById('stale-banner').classList.remove('visible');
-      const card = document.getElementById('status-card');
-      if (d.sensors_ok === false) {
-        card.className = 'status-card sensors_fail';
-        document.getElementById('status-icon').textContent  = '⚠️';
-        document.getElementById('status-label').textContent = t('sensor_fail');
-        document.getElementById('status-reason').textContent = t('sensor_fail_sub');
-        document.getElementById('status-trigger').textContent = '';
-      } else {
-        card.className = d.swimmable ? 'status-card ok' : 'status-card no';
-        document.getElementById('status-icon').textContent  = d.swimmable ? '🟢' : '🔴';
-        document.getElementById('status-label').textContent = t(d.swimmable ? 'status_ok' : 'status_no');
-        if (!d.swimmable && d.reason) {
-          document.getElementById('status-reason').textContent = d.reason;
-          const tw = parseFloat(d.temp_water_c);
-          const delta = !isNaN(tw) && tw < SWIM_TEMP_C
-            ? (SWIM_TEMP_C - tw).toFixed(1)
-            : null;
-          document.getElementById('status-trigger').textContent = delta !== null
-            ? t('status_no_trigger', { threshold: SWIM_TEMP_C, delta })
-            : '';
-        } else {
-          document.getElementById('status-reason').textContent = '';
-          document.getElementById('status-trigger').textContent = '';
-        }
-      }
-    }
-
-    const tempC = parseFloat(d.temp_water_c);
-    const tempEl = document.getElementById('temp-value');
-    if (!isNaN(tempC)) {
-      tempEl.textContent  = tempC.toFixed(1);
-      tempEl.className = 'metric-value ' + (tempC >= 24 ? 'ok' : tempC >= 20 ? 'warn' : 'bad');
-    }
-    document.getElementById('metric-temp').classList.remove('loading');
-    if (!isNaN(tempC)) { lastKnownTempC = tempC; renderTrendForecast(tempC); }
-
-    const tempAir = parseFloat(d.temp_air_c);
-    const airEl = document.getElementById('air-temp-value');
-    if (!isNaN(tempAir)) {
-      airEl.textContent = tempAir.toFixed(1);
-      airEl.className = 'metric-value ' + (tempAir >= 25 ? 'ok' : tempAir >= 20 ? 'warn' : 'bad');
-    }
-    document.getElementById('metric-air-temp').classList.remove('loading');
-
-    const verdict = computeVerdict(tempAir, tempC, d.swimmable, d.pump_on);
-    const vCard = document.getElementById('verdict-card');
-    vCard.className = 'verdict-card ' + verdict.cls;
-    document.getElementById('verdict-emoji').textContent = verdict.emoji;
-    document.getElementById('verdict-label').textContent = verdict.label;
-    document.getElementById('verdict-sub').textContent   = verdict.sub;
-
-    const powerW = parseFloat(d.pump_power_w);
-    const powerEl = document.getElementById('power-value');
-    if (!isNaN(powerW)) {
-      powerEl.textContent = powerW.toFixed(0);
-      powerEl.className = 'metric-value ' + (powerW > 0 ? 'ok' : '');
-    }
-    document.getElementById('metric-pump-power').classList.remove('loading');
-
-    const pumpBadge = document.getElementById('pump-badge');
-    pumpBadge.className   = 'pump-badge ' + (d.pump_on ? 'on' : 'off');
-    pumpBadge.textContent = t(d.pump_on ? 'pump_on' : 'pump_off');
-
-    const solarPowerW = parseFloat(d.solar_power_w);
-    const solarTotalKwh = parseFloat(d.solar_energy_total_kwh);
-    if (!isNaN(solarPowerW)) {
-      lastSolarData = { powerW: solarPowerW, totalKwh: isNaN(solarTotalKwh) ? null : solarTotalKwh };
-      renderSolar(solarPowerW, lastSolarData.totalKwh);
-    }
-
-    document.getElementById('last-updated').textContent =
-      updatedAt ? timeAgo(d.updated_at) : t('time_unknown');
-  }
-
-  let lastGoodData = null;
-  let historyEntries = [];
-  let lastKnownTempC = null;
-  let lastSolarData = null; // { powerW, totalKwh }
-
-  function renderSparkline(entries) {
-    const card = document.getElementById('trend-card');
-    const svg = document.getElementById('temp-sparkline');
-    if (!entries || entries.length < 2) return;
-    const w288 = entries.slice(-2016);
-    const temps = w288.map(e => e.temp_water_c).filter(t => typeof t === 'number' && !isNaN(t));
-    if (temps.length < 2) return;
-
-    const VW = 360, VH = 80;
-    const PL = 26, PR = 6, PT = 6, PB = 6;
-    const cW = VW - PL - PR, cH = VH - PT - PB;
-
-    const minT = Math.min(...temps), maxT = Math.max(...temps);
-    const lo = Math.max(0, minT - 0.8), hi = maxT + 0.8;
-    const span = hi - lo || 1;
-
-    const px = i => PL + (i / (temps.length - 1)) * cW;
-    const py = t => PT + (1 - (t - lo) / span) * cH;
-
-    const pts = temps.map((t, i) => px(i).toFixed(1) + ',' + py(t).toFixed(1)).join(' ');
-
-    const lastX = px(temps.length - 1), lastY = py(temps[temps.length - 1]);
-    const lastT = temps[temps.length - 1];
-    const dotColor = lastT >= SWIM_TEMP_C ? '#16a34a' : '#3b82f6';
-
-    // Area fill path
-    const areaD = 'M' + px(0).toFixed(1) + ',' + py(temps[0]).toFixed(1) +
-      temps.slice(1).map((t, i) => ' L' + px(i + 1).toFixed(1) + ',' + py(t).toFixed(1)).join('') +
-      ' L' + lastX.toFixed(1) + ',' + (PT + cH) + ' L' + PL + ',' + (PT + cH) + ' Z';
-
-    // Swim threshold line
-    const y20 = py(SWIM_TEMP_C);
-    const show20 = y20 >= PT && y20 <= PT + cH; // threshold line visibility
-
-    // Y-axis labels: only show if they don't overlap (8px gap)
-    const yMax = py(maxT), yMin = py(minT);
-    const showMax = true;
-    const showMin = Math.abs(yMin - yMax) > 14;
-    const showMinUnder20 = show20 && Math.abs(yMin - y20) < 10;
-    const showMaxUnder20 = show20 && Math.abs(yMax - y20) < 10;
-
-    svg.innerHTML =
-      '<defs>' +
-        '<linearGradient id="aG" x1="0" y1="0" x2="0" y2="1">' +
-          '<stop offset="0%" stop-color="#3b82f6" stop-opacity="0.25"/>' +
-          '<stop offset="100%" stop-color="#3b82f6" stop-opacity="0.03"/>' +
-        '</linearGradient>' +
-      '</defs>' +
-      '<path d="' + areaD + '" fill="url(#aG)"/>' +
-      (show20 && !showMinUnder20 && !showMaxUnder20
-        ? '<line x1="' + PL + '" y1="' + y20.toFixed(1) + '" x2="' + (VW - PR) + '" y2="' + y20.toFixed(1) +
-          '" stroke="#22c55e" stroke-width="1" stroke-dasharray="4,3" opacity="0.7"/>' +
-          '<text x="' + (PL - 3) + '" y="' + (y20 + 3.5).toFixed(1) + '" fill="#16a34a" font-size="9" text-anchor="end">20°</text>'
-        : '') +
-      '<polyline points="' + pts + '" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>' +
-      (showMax
-        ? '<text x="' + (PL - 3) + '" y="' + (yMax + 3.5).toFixed(1) + '" fill="#94a3b8" font-size="9" text-anchor="end">' + maxT.toFixed(1) + '°</text>'
-        : '') +
-      (showMin
-        ? '<text x="' + (PL - 3) + '" y="' + (yMin + 3.5).toFixed(1) + '" fill="#94a3b8" font-size="9" text-anchor="end">' + minT.toFixed(1) + '°</text>'
-        : '') +
-      '<circle cx="' + lastX.toFixed(1) + '" cy="' + lastY.toFixed(1) + '" r="3.5" fill="' + dotColor + '" stroke="white" stroke-width="1.5"/>';
-
-    document.getElementById('trend-range').textContent =
-      t('trend_range', { min: minT.toFixed(1), max: maxT.toFixed(1) });
-    card.classList.add('visible');
-  }
-
-  // Shared slope helper — used by computeForecast() and renderMeteoForecast()
-  // Returns { slope (°C/ms), lastTemp, dtMs, valid }
-  // NaN guard: filters entries with invalid or missing timestamps
-  function computeWaterTempSlope(entries) {
-    if (!entries || entries.length < 2) return { slope: 0, lastTemp: null, dtMs: 0, valid: false };
-    const window = entries.slice(-12);
-    const valid = window.filter(e => e.ts && !isNaN(new Date(e.ts).getTime()) && e.temp_water_c != null);
-    if (valid.length < 2) return { slope: 0, lastTemp: null, dtMs: 0, valid: false };
-    const first = valid[0], last = valid[valid.length - 1];
-    const dtMs = new Date(last.ts) - new Date(first.ts);
-    if (dtMs <= 0) return { slope: 0, lastTemp: last.temp_water_c, dtMs: 0, valid: false };
-    return { slope: (last.temp_water_c - first.temp_water_c) / dtMs, lastTemp: last.temp_water_c, dtMs, valid: true };
-  }
-
-  // Data source: history.json entries (5-min cadence), currentTemp from live status.json
-  function computeForecast(entries, currentTemp) {
-    if (currentTemp >= SWIM_TEMP_C) return null;
-    const tc = currentTemp.toFixed(1);
-    if (!entries || entries.length < 12) return { text: t('fc_insufficient'), sub: '' };
-    const { slope, valid } = computeWaterTempSlope(entries);
-    if (!valid) return { text: t('fc_insufficient'), sub: '' };
-    const THRESHOLD = 0.01 / 3600000;
-    if (Math.abs(slope) < THRESHOLD) return { text: t('fc_stable'),   sub: t('fc_stable_s',   { t: tc }) };
-    if (slope < -THRESHOLD)          return { text: t('fc_cooling'),  sub: t('fc_cooling_s',  { t: tc }) };
-    const etaMs = (SWIM_TEMP_C - currentTemp) / slope;
-    if (etaMs > 24 * 3600000)        return { text: t('fc_not_today'), sub: t('fc_not_today_s', { t: tc }) };
-    const eta = new Date(Date.now() + etaMs);
-    const h = eta.getHours(), m = eta.getMinutes();
-    let timeStr;
-    if (lang === 'fr') {
-      timeStr = m < 15 ? h + 'h' : m < 45 ? h + 'h30' : ((h + 1) % 24) + 'h';
-    } else {
-      const bH = m < 45 ? h : (h + 1) % 24;
-      const h12 = bH % 12 || 12;
-      const ampm = bH < 12 ? 'AM' : 'PM';
-      timeStr = m < 15 ? h12 + ' ' + ampm : m < 45 ? h12 + ':30 ' + ampm : h12 + ' ' + ampm;
-    }
-    return { text: t('fc_ready', { time: timeStr }), sub: t('fc_ready_s', { t: tc }) };
-  }
-
-  // Data source: history.json (trend-based, short-term extrapolation)
-  function renderTrendForecast(tempC) {
-    const forecast = computeForecast(historyEntries, tempC);
-    const card = document.getElementById('forecast-card');
-    if (!forecast) { card.classList.remove('visible'); return; }
-    card.classList.add('visible');
-    document.getElementById('forecast-label').textContent = forecast.text;
-    document.getElementById('forecast-sub').textContent   = forecast.sub;
-  }
-
-  function renderSolar(powerW, totalKwh) {
-    const card = document.getElementById('solar-card');
-    if (powerW == null || isNaN(powerW)) { card.classList.remove('visible'); return; }
-    card.classList.add('visible');
-
-    const powerValEl = document.getElementById('solar-power-value');
-    const powerUnitEl = document.getElementById('solar-power-unit');
-    if (powerW >= 1000) {
-      powerValEl.textContent = (powerW / 1000).toFixed(2);
-      powerUnitEl.textContent = 'kW';
-    } else {
-      powerValEl.textContent = Math.round(powerW);
-      powerUnitEl.textContent = 'W';
-    }
-
-    const todayValEl = document.getElementById('solar-today-value');
-    if (totalKwh != null && !isNaN(totalKwh) && historyEntries.length > 0) {
-      const todayStr = new Date().toDateString();
-      const todayFirst = historyEntries.find(e =>
-        e.solar_energy_total_kwh != null &&
-        new Date(e.ts).toDateString() === todayStr
-      );
-      if (todayFirst) {
-        todayValEl.textContent = Math.max(0, totalKwh - todayFirst.solar_energy_total_kwh).toFixed(2);
-      } else {
-        todayValEl.textContent = '—';
-      }
-    } else {
-      todayValEl.textContent = '—';
-    }
-  }
-
-  async function fetchHistory() {
-    try {
-      const res = await fetch('history.json?ts=' + Date.now());
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const data = await res.json();
-      historyEntries = data.entries || [];
-      renderSparkline(historyEntries);
-      if (lastKnownTempC !== null) renderTrendForecast(lastKnownTempC);
-      if (lastSolarData) renderSolar(lastSolarData.powerW, lastSolarData.totalKwh);
-    } catch (e) {
-      // history unavailable — sparkline and forecast stay hidden
-    }
-  }
-
-  async function fetchStatus() {
-    try {
-      const res = await fetch('status.json?ts=' + Date.now());
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const data = await res.json(); // peut throw SyntaxError si JSON corrompu
-      lastGoodData = data;
-      safeSet('lastStatus', JSON.stringify(data));
-      applyData(data);
-    } catch (e) {
-      // Fallback localStorage
-      const cached = safeGet('lastStatus');
-      if (cached) {
-        try {
-          applyData(JSON.parse(cached));
-        } catch (_) {
-          showError();
-        }
-      } else {
-        showError();
-      }
-    }
-  }
-
-  function showError() {
-    const card = document.getElementById('status-card');
-    card.className = 'status-card no';
-    document.getElementById('status-icon').textContent = '⚠️';
-    document.getElementById('status-label').textContent = t('error_label');
-    document.getElementById('status-reason').textContent = t('error_sub');
-    document.getElementById('status-trigger').textContent = '';
-    document.getElementById('metric-temp').classList.remove('loading');
-    document.getElementById('metric-air-temp').classList.remove('loading');
-    document.getElementById('metric-pump-power').classList.remove('loading');
-  }
-
-  // ── Tab navigation ─────────────────────────────────────────────────────────
-  let currentTab    = safeGet('piscine_tab',     'aujourdhui');
-  let currentSubTab = safeGet('piscine_sub_tab', 'saison');
-
-  function showTab(name) {
-    ['aujourdhui', '7jours', 'historique'].forEach(n => {
-      const panel = document.getElementById('tab-' + n);
-      const btn   = document.getElementById('tab-btn-' + n);
-      if (panel) panel.style.display = n === name ? '' : 'none';
-      if (btn)   btn.classList.toggle('active', n === name);
-    });
-    currentTab = name;
-    safeSet('piscine_tab', name);
-    if (name === 'historique' && dailySummaryEntries.length > 0) renderHistorique();
-  }
-
-  function showSubTab(name) {
-    ['saison', 'charts', 'energie'].forEach(n => {
-      const panel = document.getElementById('subtab-' + n);
-      const btn   = document.getElementById('sub-btn-' + n);
-      if (panel) panel.style.display = n === name ? '' : 'none';
-      if (btn)   btn.classList.toggle('active', n === name);
-    });
-    currentSubTab = name;
-    safeSet('piscine_sub_tab', name);
-  }
-
-  function initTabs() {
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.addEventListener('click', () => showTab(btn.dataset.tab));
-    });
-    document.querySelectorAll('.sub-tab-btn').forEach(btn => {
-      btn.addEventListener('click', () => showSubTab(btn.dataset.sub));
-    });
-    // Restore persisted state
-    showTab(currentTab);
-    showSubTab(currentSubTab);
-  }
-
-  // ── daily_summary.json ──────────────────────────────────────────────────────
-  let dailySummaryEntries = [];
-  let dailySummarySeasonStart = null;
-  let tempChartDays  = 30;
-  let solarChartDays = 30;
-  let lastRegression = null; // computed by renderCorrelation(), used by renderMeteoForecast()
-
-  async function fetchDailySummary() {
-    try {
-      const res = await fetch('daily_summary.json?ts=' + Date.now());
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const data = await res.json();
-      dailySummaryEntries     = data.entries || [];
-      dailySummarySeasonStart = data.season_start || null;
-      if (currentTab === 'historique') renderHistorique();
-    } catch (_) {
-      // daily_summary.json not yet available — State A empty state is shown on tab open
-    }
-  }
-
-  function renderHistorique() {
-    const entries = dailySummaryEntries;
-    const emptyA  = document.getElementById('hist-empty-a');
-    const subBars = document.querySelector('.sub-tab-bar');
-
-    if (!entries || entries.length === 0) {
-      emptyA.style.display  = '';
-      subBars.style.display = 'none';
-      ['saison','charts','energie'].forEach(n => {
-        const p = document.getElementById('subtab-' + n);
-        if (p) p.style.display = 'none';
-      });
-      return;
-    }
-
-    emptyA.style.display  = 'none';
-    subBars.style.display = '';
-    showSubTab(currentSubTab);
-
-    renderSeasonStats(entries);
-    renderSeasonBests(entries);
-    renderSwimHeatmap(entries);
-    renderTempChart(entries, tempChartDays);
-    renderSolarChart(entries, solarChartDays);
-    const reg = renderCorrelation(entries);
-    lastRegression = reg;
-    renderEnergyCost(entries);
-    renderMeteoForecast(reg);
-  }
-
-  // ── renderSeasonStats() ───────────────────────────────────────────────────
-  function renderSeasonStats(entries) {
-    const start = dailySummarySeasonStart;
-    const seasonal = start ? entries.filter(e => e.date >= start) : entries;
-    const swimDays  = seasonal.filter(e => (e.swimmable_minutes || 0) > 0).length;
-    const solarKwh  = seasonal.reduce((s, e) => s + (e.solar_kwh_today || 0), 0);
-    document.getElementById('stat-swim-days').textContent = swimDays;
-    document.getElementById('stat-solar-kwh').textContent = solarKwh >= 10
-      ? Math.round(solarKwh) : solarKwh.toFixed(1);
-  }
-
-  // ── renderSeasonBests() ───────────────────────────────────────────────────
-  function renderSeasonBests(entries) {
-    const el = document.getElementById('season-bests');
-    const withWater  = entries.filter(e => e.max_water_c != null);
-    const withSolar  = entries.filter(e => e.solar_kwh_today != null);
-    if (!withWater.length && !withSolar.length) { el.style.display = 'none'; return; }
-    el.style.display = '';
-    const bestWater  = withWater.length  ? withWater.reduce((b, e)  => e.max_water_c  > b.max_water_c  ? e : b) : null;
-    const bestSolar  = withSolar.length  ? withSolar.reduce((b, e)  => e.solar_kwh_today > b.solar_kwh_today ? e : b) : null;
-    const fmt = d => new Date(d + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
-    let html = '';
-    if (bestWater) html += '<div class="best-item"><span>' + t('best_water') + '</span><span class="best-value">' + bestWater.max_water_c.toFixed(1) + '°C · ' + fmt(bestWater.date) + '</span></div>';
-    if (bestSolar) html += '<div class="best-item"><span>' + t('best_solar') + '</span><span class="best-value">' + bestSolar.solar_kwh_today.toFixed(1) + ' kWh · ' + fmt(bestSolar.date) + '</span></div>';
-    el.innerHTML = html;
-  }
-
-  // ── renderSwimHeatmap() ───────────────────────────────────────────────────
-  function renderSwimHeatmap(entries) {
-    const el = document.getElementById('swim-heatmap');
-    if (!entries.length) { el.innerHTML = ''; return; }
-    const byDate = {};
-    entries.forEach(e => { byDate[e.date] = e.swimmable_minutes || 0; });
-    const start = dailySummarySeasonStart || entries[0].date;
-    const startD = new Date(start + 'T12:00:00'), endD = new Date();
-    let cells = '';
-    for (let d = new Date(startD); d <= endD; d.setDate(d.getDate() + 1)) {
-      const key = d.toISOString().slice(0, 10);
-      const mins = byDate[key] || 0;
-      const cls  = mins === 0 ? '' : mins < 60 ? ' swim-lo' : mins < 240 ? ' swim-mid' : ' swim-hi';
-      cells += '<div class="heatmap-cell' + cls + '" title="' + key + (mins ? ' · ' + mins + 'min' : '') + '"></div>';
-    }
-    el.innerHTML = '<div class="heatmap-title">' + t('heatmap_title') + '</div><div class="heatmap-grid">' + cells + '</div>';
-  }
-
-  // ── Period pills helper ───────────────────────────────────────────────────
-  function renderPills(containerId, activeDays, onPick) {
-    const pillDays = [7, 30, 90];
-    const keys     = ['period_7j', 'period_30j', 'period_90j'];
-    const el = document.getElementById(containerId);
-    el.innerHTML = '';
-    pillDays.forEach((d, i) => {
-      const btn = document.createElement('button');
-      btn.className = 'period-pill' + (d === activeDays ? ' active' : '');
-      btn.textContent = t(keys[i]);
-      btn.onclick = () => onPick(d);
-      el.appendChild(btn);
-    });
-  }
-
-  function periodLabel(containerId, available, requested) {
-    const el = document.getElementById(containerId);
-    el.textContent = available < requested ? t('period_available', { n: available }) : '';
-  }
-
-  function filterPeriod(entries, days) {
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - days);
-    const cut = cutoff.toISOString().slice(0, 10);
-    return entries.filter(e => e.date >= cut);
-  }
-
-  // ── renderTempChart() ─────────────────────────────────────────────────────
-  function renderTempChart(entries, days) {
-    const svg   = document.getElementById('temp-chart-svg');
-    const empty = document.getElementById('temp-chart-empty');
-    renderPills('temp-chart-pills', days, d => { tempChartDays = d; renderTempChart(dailySummaryEntries, d); });
-    const slice = filterPeriod(entries, days);
-    const valid = slice.filter(e => e.avg_water_c != null);
-    periodLabel('temp-chart-available', valid.length, days);
-    if (valid.length < 2) {
-      svg.innerHTML = ''; empty.style.display = ''; empty.textContent = t('hist_empty_b'); return;
-    }
-    empty.style.display = 'none';
-
-    const VW = 360, VH = 120, PL = 28, PR = 6, PT = 8, PB = 16;
-    const cW = VW - PL - PR, cH = VH - PT - PB;
-    const temps = valid.map(e => e.avg_water_c);
-    const minT = Math.min(...temps), maxT = Math.max(...temps);
-    const lo = Math.max(0, minT - 1), hi = maxT + 1, span = hi - lo || 1;
-    const n   = valid.length;
-    const px  = i => PL + (i / (n - 1)) * cW;
-    const py  = v => PT + (1 - (v - lo) / span) * cH;
-
-    // Swim threshold line
-    const yt   = py(SWIM_TEMP_C);
-    const showT = yt >= PT && yt <= PT + cH;
-
-    const pts = valid.map((e, i) => px(i).toFixed(1) + ',' + py(e.avg_water_c).toFixed(1)).join(' ');
-    const areaD = 'M' + px(0).toFixed(1) + ',' + py(valid[0].avg_water_c).toFixed(1)
-      + valid.slice(1).map((e, i) => ' L' + px(i + 1).toFixed(1) + ',' + py(e.avg_water_c).toFixed(1)).join('')
-      + ' L' + px(n - 1).toFixed(1) + ',' + (PT + cH) + ' L' + PL + ',' + (PT + cH) + ' Z';
-
-    // X-axis labels
-    const fmtDate = d => { const p = d.split('-'); return p[2] + '/' + p[1]; };
-    const xLabels = '<text x="' + PL + '" y="' + (VH - 2) + '" font-size="8" fill="#9ca3af">' + fmtDate(valid[0].date) + '</text>'
-      + '<text x="' + (VW - PR) + '" y="' + (VH - 2) + '" font-size="8" fill="#9ca3af" text-anchor="end">' + fmtDate(valid[n - 1].date) + '</text>';
-
-    svg.innerHTML =
-      '<defs><linearGradient id="tcG" x1="0" y1="0" x2="0" y2="1">'
-      + '<stop offset="0%" stop-color="#3b82f6" stop-opacity="0.2"/>'
-      + '<stop offset="100%" stop-color="#3b82f6" stop-opacity="0.02"/>'
-      + '</linearGradient></defs>'
-      + '<path d="' + areaD + '" fill="url(#tcG)"/>'
-      + (showT ? '<line x1="' + PL + '" y1="' + yt.toFixed(1) + '" x2="' + (VW - PR) + '" y2="' + yt.toFixed(1) + '" stroke="#22c55e" stroke-width="1" stroke-dasharray="4,3" opacity="0.7"/>'
-        + '<text x="' + (PL - 2) + '" y="' + (yt + 3.5).toFixed(1) + '" fill="#16a34a" font-size="8" text-anchor="end">' + SWIM_TEMP_C + '°</text>' : '')
-      + '<polyline points="' + pts + '" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linejoin="round"/>'
-      + '<text x="' + (PL - 2) + '" y="' + (py(maxT) + 3.5).toFixed(1) + '" fill="#94a3b8" font-size="8" text-anchor="end">' + maxT.toFixed(0) + '°</text>'
-      + '<text x="' + (PL - 2) + '" y="' + (py(minT) + 3.5).toFixed(1) + '" fill="#94a3b8" font-size="8" text-anchor="end">' + minT.toFixed(0) + '°</text>'
-      + xLabels;
-  }
-
-  // ── renderSolarChart() ────────────────────────────────────────────────────
-  function renderSolarChart(entries, days) {
-    const svg   = document.getElementById('solar-chart-svg');
-    const empty = document.getElementById('solar-chart-empty');
-    renderPills('solar-chart-pills', days, d => { solarChartDays = d; renderSolarChart(dailySummaryEntries, d); });
-    const slice = filterPeriod(entries, days);
-    const valid = slice.filter(e => e.solar_kwh_today != null && e.solar_kwh_today > 0);
-    periodLabel('solar-chart-available', slice.length, days);
-    if (valid.length === 0) {
-      svg.innerHTML = ''; empty.style.display = ''; empty.textContent = t('hist_empty_b'); return;
-    }
-    empty.style.display = 'none';
-
-    const VW = 360, VH = 80, PT = 4, PB = 12;
-    const maxK = Math.max(...valid.map(e => e.solar_kwh_today));
-    const barW  = Math.max(1, Math.floor((VW / slice.length) * 0.7));
-    const gap   = VW / slice.length;
-
-    let bars = '', xLabels = '';
-    slice.forEach((e, i) => {
-      if (!e.solar_kwh_today) return;
-      const h = ((e.solar_kwh_today / maxK) * (VH - PT - PB));
-      const x = i * gap + (gap - barW) / 2;
-      bars += '<rect x="' + x.toFixed(1) + '" y="' + (VH - PB - h).toFixed(1) + '" width="' + barW + '" height="' + h.toFixed(1) + '" fill="#d97706" rx="2"/>';
-    });
-    const fmtDate = d => { const p = d.split('-'); return p[2] + '/' + p[1]; };
-    xLabels = '<text x="0" y="' + VH + '" font-size="7" fill="#9ca3af">' + fmtDate(slice[0].date) + '</text>'
-      + '<text x="' + VW + '" y="' + VH + '" font-size="7" fill="#9ca3af" text-anchor="end">' + fmtDate(slice[slice.length - 1].date) + '</text>';
-    svg.innerHTML = bars + xLabels;
-  }
-
-  // ── renderCorrelation() ───────────────────────────────────────────────────
-  // Returns regression object { slope, intercept, n } or null
-  function renderCorrelation(entries) {
-    const svg   = document.getElementById('corr-svg');
-    const empty = document.getElementById('corr-empty');
-    const last30 = filterPeriod(entries, 30);
-    const valid  = last30.filter(e => e.avg_air_c != null && e.avg_water_c != null);
-
-    if (valid.length < 7) {
-      svg.innerHTML = ''; empty.style.display = '';
-      empty.textContent = t('fc_meteo_data', { n: valid.length }); return null;
-    }
-
-    // Variance guard — zero variance = stuck sensor, degenerate regression
-    const airVals  = valid.map(e => e.avg_air_c);
-    const meanAir  = airVals.reduce((a, b) => a + b, 0) / airVals.length;
-    const variance = airVals.reduce((s, v) => s + (v - meanAir) ** 2, 0) / airVals.length;
-    if (variance === 0) {
-      svg.innerHTML = ''; empty.style.display = '';
-      empty.textContent = t('fc_meteo_data', { n: valid.length }); return null;
-    }
-
-    empty.style.display = 'none';
-
-    // Linear regression (air → water)
-    const waterVals = valid.map(e => e.avg_water_c);
-    const meanWater = waterVals.reduce((a, b) => a + b, 0) / waterVals.length;
-    const num = valid.reduce((s, e) => s + (e.avg_air_c - meanAir) * (e.avg_water_c - meanWater), 0);
-    const den = airVals.reduce((s, v) => s + (v - meanAir) ** 2, 0);
-    const slope = num / den, intercept = meanWater - slope * meanAir;
-
-    // SVG
-    const VW = 300, VH = 140, PL = 30, PR = 8, PT = 8, PB = 24;
-    const cW = VW - PL - PR, cH = VH - PT - PB;
-    const minAir = Math.min(...airVals) - 2, maxAir = Math.max(...airVals) + 2;
-    const minWtr = Math.min(...waterVals) - 2, maxWtr = Math.max(...waterVals) + 2;
-    const px = v => PL + (v - minAir) / (maxAir - minAir) * cW;
-    const py = v => PT + (1 - (v - minWtr) / (maxWtr - minWtr)) * cH;
-
-    // Trendline endpoints
-    const ty1 = slope * minAir + intercept, ty2 = slope * maxAir + intercept;
-    const dots = valid.map(e =>
-      '<circle cx="' + px(e.avg_air_c).toFixed(1) + '" cy="' + py(e.avg_water_c).toFixed(1) + '" r="3" fill="#64748b" opacity="0.6"/>'
-    ).join('');
-
-    svg.innerHTML =
-      '<line x1="' + PL + '" y1="' + PT + '" x2="' + PL + '" y2="' + (PT + cH) + '" stroke="#e5e7eb" stroke-width="1"/>'
-      + '<line x1="' + PL + '" y1="' + (PT + cH) + '" x2="' + (VW - PR) + '" y2="' + (PT + cH) + '" stroke="#e5e7eb" stroke-width="1"/>'
-      + '<line x1="' + px(minAir).toFixed(1) + '" y1="' + py(ty1).toFixed(1) + '" x2="' + px(maxAir).toFixed(1) + '" y2="' + py(ty2).toFixed(1) + '" stroke="#3b82f6" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>'
-      + dots
-      + '<text x="' + (VW / 2) + '" y="' + (VH - 4) + '" font-size="8" fill="#9ca3af" text-anchor="middle">Air (°C)</text>'
-      + '<text x="' + PL + '" y="' + (PT + cH + 12) + '" font-size="7" fill="#9ca3af">' + Math.round(minAir + 2) + '°</text>'
-      + '<text x="' + (VW - PR) + '" y="' + (PT + cH + 12) + '" font-size="7" fill="#9ca3af" text-anchor="end">' + Math.round(maxAir - 2) + '°</text>'
-      + '<text x="' + (PL - 3) + '" y="' + (PT + 3) + '" font-size="7" fill="#9ca3af" text-anchor="end">' + Math.round(maxWtr - 2) + '°</text>'
-      + '<text x="' + (PL - 3) + '" y="' + (PT + cH) + '" font-size="7" fill="#9ca3af" text-anchor="end">' + Math.round(minWtr + 2) + '°</text>';
-
-    return { slope, intercept, n: valid.length };
-  }
-
-  // ── renderEnergyCost() ────────────────────────────────────────────────────
-  function renderEnergyCost(entries) {
-    const tariff  = parseFloat(safeGet('piscine_tariff', '0.22')) || 0.22;
-    const PUMP_KW = 0.75;
-    const start   = dailySummarySeasonStart;
-    const seasonal = start ? entries.filter(e => e.date >= start) : entries;
-
-    const todayStr   = new Date().toISOString().slice(0, 10);
-    const todayEntry = entries.find(e => e.date === todayStr);
-    const todaySavings = todayEntry && todayEntry.solar_kwh_today
-      ? (todayEntry.solar_kwh_today * tariff).toFixed(2) : null;
-
-    const seasonSolar = seasonal.reduce((s, e) => s + (e.solar_kwh_today || 0), 0);
-    const seasonSavings = (seasonSolar * tariff).toFixed(2);
-    const pumpHours  = seasonal.reduce((s, e) => s + (e.pump_on_minutes || 0), 0) / 60;
-    const pumpCost   = (pumpHours * PUMP_KW * tariff).toFixed(2);
-
-    const items = [
-      { value: todaySavings !== null ? todaySavings + ' €' : '—', label: t('energy_savings_lbl') },
-      { value: seasonSavings + ' €', label: t('energy_season_lbl') },
-      { value: pumpCost + ' €', label: t('energy_pump_lbl') },
-    ];
-    document.getElementById('energy-grid').innerHTML = items.map(item =>
-      '<div class="energy-item"><div class="energy-value">' + item.value + '</div><div class="energy-label">' + item.label + '</div></div>'
-    ).join('');
-  }
-
-  // ── Settings drawer ───────────────────────────────────────────────────────
-  function initSettingsDrawer() {
-    // Restore saved values
-    const tariff = safeGet('piscine_tariff', '');
-    const lat    = safeGet('piscine_lat',    '');
-    const lon    = safeGet('piscine_lon',    '');
-    if (tariff) document.getElementById('settings-tariff').value = tariff;
-    if (lat)    document.getElementById('settings-lat').value    = lat;
-    if (lon)    document.getElementById('settings-lon').value    = lon;
-
-    // Save on change + re-render affected views
-    let debounce;
-    ['settings-tariff', 'settings-lat', 'settings-lon'].forEach(id => {
-      document.getElementById(id).addEventListener('input', () => {
-        clearTimeout(debounce);
-        debounce = setTimeout(() => {
-          safeSet('piscine_tariff', document.getElementById('settings-tariff').value);
-          safeSet('piscine_lat',    document.getElementById('settings-lat').value);
-          safeSet('piscine_lon',    document.getElementById('settings-lon').value);
-          if (dailySummaryEntries.length > 0) {
-            renderEnergyCost(dailySummaryEntries);
-            renderMeteoForecast(lastRegression);
-          }
-        }, 400);
-      });
-    });
-
-    document.getElementById('settings-open-btn').addEventListener('click', openSettings);
-    document.getElementById('settings-close').addEventListener('click', closeSettings);
-    document.getElementById('settings-backdrop').addEventListener('click', closeSettings);
-  }
-
-  function openSettings() {
-    document.getElementById('settings-drawer').classList.add('open');
-    document.getElementById('settings-backdrop').classList.add('open');
-  }
-  function closeSettings() {
-    document.getElementById('settings-drawer').classList.remove('open');
-    document.getElementById('settings-backdrop').classList.remove('open');
-  }
-
-  // ── renderMeteoForecast() ─────────────────────────────────────────────────
-  // Data source: Open-Meteo API + air→water regression from renderCorrelation()
-  const OPENMETEO_CACHE_MS = 6 * 60 * 60 * 1000; // 6 hours
-
-  async function renderMeteoForecast(regression) {
-    const el = document.getElementById('meteo-forecast-content');
-
-    // State 1: coords not configured
-    const lat = parseFloat(safeGet('piscine_lat', ''));
-    const lon = parseFloat(safeGet('piscine_lon', ''));
-    if (!lat || !lon || isNaN(lat) || isNaN(lon)) {
-      el.innerHTML = '<div class="meteo-message">' + t('fc_meteo_coords') + '</div>'; return;
-    }
-
-    // State 3: insufficient regression data
-    if (!regression || regression.n < 7) {
-      el.innerHTML = '<div class="meteo-message">' + t('fc_meteo_data', { n: regression ? regression.n : 0 }) + '</div>'; return;
-    }
-
-    // Try cache
-    let tomorrowAir = null;
-    const cached = safeGet('openmeteo_forecast');
-    if (cached) {
-      try {
-        const c = JSON.parse(cached);
-        if (Date.now() - c.cached_at < OPENMETEO_CACHE_MS) {
-          tomorrowAir = c.tomorrow_max;
-        }
-      } catch (_) {}
-    }
-
-    // Fetch if not cached
-    if (tomorrowAir === null) {
-      try {
-        const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat
-          + '&longitude=' + lon + '&daily=temperature_2m_max&forecast_days=2&timezone=auto';
-        const res = await fetch(url);
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        const data = await res.json();
-        tomorrowAir = data.daily.temperature_2m_max[1];
-        safeSet('openmeteo_forecast', JSON.stringify({ tomorrow_max: tomorrowAir, cached_at: Date.now() }));
-      } catch (_) {
-        // State 2: API failed — show hours since last cache
-        const lastCached = (() => { try { return JSON.parse(safeGet('openmeteo_forecast', 'null')); } catch (_) { return null; } })();
-        const hoursAgo = lastCached ? Math.round((Date.now() - lastCached.cached_at) / 3600000) : '?';
-        el.innerHTML = '<div class="meteo-message">' + t('fc_meteo_api', { h: hoursAgo }) + '</div>'; return;
-      }
-    }
-
-    const predictedWater = (regression.slope * tomorrowAir + regression.intercept).toFixed(1);
-    el.innerHTML = '<div class="meteo-row highlight">' + t('fc_meteo_tmr', { air: Math.round(tomorrowAir), water: predictedWater }) + '</div>';
-  }
-
-  // Initial load + refresh toutes les 5 min
-  initUI();
-  initTabs();
-  initSettingsDrawer();
-  fetchStatus();
-  fetchHistory();
-  fetchDailySummary();
-  setInterval(fetchStatus, 5 * 60 * 1000);
-  setInterval(fetchHistory, 5 * 60 * 1000);
-  setInterval(fetchDailySummary, 5 * 60 * 1000);
-
-  // Service worker (PWA offline support)
-  if ('serviceWorker' in navigator) {
-    try { navigator.serviceWorker.register('sw.js'); } catch (_) {}
-  }
+  return (
+    <>
+      <div className="lang-toggle" role="group" aria-label="Language">
+        <button aria-pressed={lang === 'fr'} onClick={() => setLang('fr')}>FR</button>
+        <button aria-pressed={lang === 'en'} onClick={() => setLang('en')}>EN</button>
+      </div>
+      <HorizonView data={data} lang={lang} t={t} nowHour={new Date().getHours()}/>
+    </>
+  );
+}
+
+// Expose loader for interval refresh
+window.loadHouseData = loadHouseData;
+
+ReactDOM.createRoot(document.getElementById('app')).render(<App/>);
+</script>
+
+<script>
+// Service worker registration (kept from previous version)
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
 </script>
 </body>
 </html>
