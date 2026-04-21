@@ -193,6 +193,22 @@ function hourlyBuckets(entries, hoursBack, field, now) {
   return Array.from(byHour.entries()).sort((a,b) => a[0]-b[0]).map(([,v]) => v);
 }
 
+// Same as hourlyBuckets but also returns the hour Date for each bucket
+function hourlyBucketsDetailed(entries, hoursBack, field, now) {
+  if (!entries || !entries.length) return [];
+  const cutoff = now.getTime() - hoursBack * 3600 * 1000;
+  const byHour = new Map();
+  for (const e of entries) {
+    const t = new Date(e.ts).getTime();
+    if (t < cutoff) continue;
+    const hourKey = Math.floor(t / 3600000);
+    byHour.set(hourKey, e[field]);
+  }
+  return Array.from(byHour.entries())
+    .sort((a,b) => a[0]-b[0])
+    .map(([k, v]) => ({ hour: new Date(k * 3600000), v }));
+}
+
 // Hourly solar production (kWh) by differentiating cumulative kWh counter
 function hourlySolar(entries, hoursBack, now) {
   if (!entries || !entries.length) return [];
@@ -268,7 +284,7 @@ function buildHouseData(status, daily, history, meteo) {
   const airTemp  = status && status.temp_air_c   != null ? +status.temp_air_c   : null;
   const solarW   = status && status.solar_power_w  != null ? +status.solar_power_w : null;
 
-  const pool24 = hourlyBuckets(entries, 24, 'temp_water_c', now);
+  const pool24 = hourlyBucketsDetailed(entries, 24, 'temp_water_c', now);
   const air24  = hourlyBuckets(entries, 24, 'temp_air_c',  now);
   const solar24Kwh = hourlySolar(entries, 24, now);
   const solarCapacity = Math.max(SOLAR_CAPACITY_KW, ...solar24Kwh);
@@ -284,6 +300,14 @@ function buildHouseData(status, daily, history, meteo) {
   // Last 7 days
   const week = dailyEntries.slice(-7);
   const weekKwh = week.reduce((a, e) => a + (e.solar_kwh_today || 0), 0);
+
+  // Pool temperature extremes (today from daily_summary, week from last 7 entries)
+  const poolDayMin = todayEntry && todayEntry.min_water_c != null ? +todayEntry.min_water_c : null;
+  const poolDayMax = todayEntry && todayEntry.max_water_c != null ? +todayEntry.max_water_c : null;
+  const weekWaterMins = week.map(e => e.min_water_c).filter(v => v != null);
+  const weekWaterMaxs = week.map(e => e.max_water_c).filter(v => v != null);
+  const poolWeekMin = weekWaterMins.length ? Math.min(...weekWaterMins) : null;
+  const poolWeekMax = weekWaterMaxs.length ? Math.max(...weekWaterMaxs) : null;
   // Current calendar month
   const monthKey = todayIso.slice(0, 7);
   const monthKwh = dailyEntries
@@ -349,6 +373,10 @@ function buildHouseData(status, daily, history, meteo) {
       target: POOL_TARGET,
       verdict: poolVerdict(poolTemp),
       history24: pool24,
+      dayMin: poolDayMin,
+      dayMax: poolDayMax,
+      weekMin: poolWeekMin,
+      weekMax: poolWeekMax,
     },
 
     outdoor: {
@@ -649,6 +677,88 @@ function Sparkline({ data, width = 300, height = 48, color = '#6fb9ff', fill = t
   );
 }
 
+function TempScrubber({ points, color = '#6fb9ff', height = 64 }) {
+  const width = 340;
+  const uid = React.useId();
+  const containerRef = React.useRef(null);
+  const [idx, setIdx] = React.useState(null); // null = rest position (latest)
+
+  if (!points || points.length < 2) {
+    return <div style={{ height, color: 'var(--ink-faint)', fontSize: 11, fontFamily: 'JetBrains Mono, monospace', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>—</div>;
+  }
+
+  const values = points.map(p => p.v);
+  const min = Math.min(...values), max = Math.max(...values);
+  const range = max - min || 1;
+  const step = width / (points.length - 1);
+  const coords = points.map((p, i) => [i * step, height - ((p.v - min) / range) * (height - 14) - 7]);
+  const d = coords.map((p, i) => (i === 0 ? `M${p[0]},${p[1]}` : `L${p[0]},${p[1]}`)).join(' ');
+  const area = `${d} L${width},${height} L0,${height} Z`;
+
+  const activeIdx = idx ?? points.length - 1;
+  const active = coords[activeIdx];
+  const activePoint = points[activeIdx];
+
+  const pickFromClientX = (clientX) => {
+    const rect = containerRef.current.getBoundingClientRect();
+    const rel = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    setIdx(Math.round(rel * (points.length - 1)));
+  };
+
+  const hourLabel = activePoint.hour.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const leftPct = (active[0] / width) * 100;
+  const bubbleTransform = leftPct < 12
+    ? 'translate(0, -100%)'
+    : leftPct > 88
+      ? 'translate(-100%, -100%)'
+      : 'translate(-50%, -100%)';
+
+  return (
+    <div
+      ref={containerRef}
+      onMouseMove={(e) => pickFromClientX(e.clientX)}
+      onMouseLeave={() => setIdx(null)}
+      onTouchStart={(e) => pickFromClientX(e.touches[0].clientX)}
+      onTouchMove={(e) => { e.preventDefault(); pickFromClientX(e.touches[0].clientX); }}
+      onTouchEnd={() => setIdx(null)}
+      style={{ position: 'relative', paddingTop: 22, cursor: 'ew-resize', touchAction: 'pan-y' }}
+    >
+      <svg width="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" style={{ display: 'block', overflow: 'visible' }}>
+        <defs>
+          <linearGradient id={`tsg-${uid}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor={color} stopOpacity="0.28"/>
+            <stop offset="1" stopColor={color} stopOpacity="0"/>
+          </linearGradient>
+        </defs>
+        <path d={area} fill={`url(#tsg-${uid})`}/>
+        <path d={d} fill="none" stroke={color} strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round"/>
+        <line x1={active[0]} x2={active[0]} y1={0} y2={height} stroke={color} strokeOpacity="0.5" strokeWidth="1" strokeDasharray="2 3" vectorEffect="non-scaling-stroke"/>
+        <circle cx={active[0]} cy={active[1]} r={4} fill={color} stroke="rgba(5,9,14,0.9)" strokeWidth="2"/>
+      </svg>
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: `${leftPct}%`,
+        transform: bubbleTransform,
+        padding: '4px 9px',
+        borderRadius: 8,
+        background: 'rgba(10,17,24,0.95)',
+        border: `1px solid ${color}55`,
+        color: 'var(--ink)',
+        fontFamily: 'JetBrains Mono, monospace',
+        fontSize: 10,
+        letterSpacing: '0.04em',
+        whiteSpace: 'nowrap',
+        pointerEvents: 'none',
+        boxShadow: '0 2px 10px rgba(0,0,0,0.4)',
+      }}>
+        <span className="num" style={{ color }}>{activePoint.v.toFixed(1)}°</span>
+        <span style={{ color: 'var(--ink-faint)', marginLeft: 7 }} className="num">{hourLabel}</span>
+      </div>
+    </div>
+  );
+}
+
 function HourBars({ data, color = '#f5b872', height = 110, nowHour }) {
   const safe = data && data.length ? data : Array(24).fill(0);
   const max = Math.max(...safe) || 1;
@@ -799,11 +909,45 @@ function PoolHero({ data, t, expanded, onExpand }) {
           <span style={{ fontSize: 10, color: 'var(--ink-faint)', fontFamily: 'JetBrains Mono, monospace' }}>{t.target} {data.target}°</span>
         </div>
 
-        <div style={{ marginTop: 14, opacity: 0.85 }}>
-          <Sparkline data={data.history24} width={340} height={36} color={toneColor} strokeWidth={1.2}/>
+        <div style={{ marginTop: 14, opacity: 0.92 }}>
+          <TempScrubber points={data.history24} color={toneColor} height={60}/>
         </div>
+
+        {(data.dayMin != null || data.dayMax != null || data.weekMin != null || data.weekMax != null) && (
+          <div style={{
+            marginTop: 14, paddingTop: 12,
+            borderTop: '1px solid var(--line)',
+            display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10,
+          }}>
+            <MinMaxRow label={t.today} min={data.dayMin} max={data.dayMax} color={toneColor}/>
+            <MinMaxRow label={t.week}  min={data.weekMin} max={data.weekMax} color={toneColor}/>
+          </div>
+        )}
       </div>
     </Card>
+  );
+}
+
+function MinMaxRow({ label, min, max, color }) {
+  const fmt = v => (v == null || !Number.isFinite(v)) ? '—' : (+v).toFixed(1);
+  return (
+    <div>
+      <div style={{
+        fontFamily: 'JetBrains Mono, monospace', fontSize: 9.5,
+        letterSpacing: '0.15em', textTransform: 'uppercase',
+        color: 'var(--ink-faint)',
+      }}>{label}</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 4, fontFamily: 'JetBrains Mono, monospace', fontSize: 12 }}>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: 'var(--ink-dim)' }}>
+          {Ico.arrowDown(10, 'var(--ink-faint)')}
+          <span className="num" style={{ color: 'var(--ink)' }}>{fmt(min)}°</span>
+        </span>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: 'var(--ink-dim)' }}>
+          {Ico.arrowUp(10, color)}
+          <span className="num" style={{ color: 'var(--ink)' }}>{fmt(max)}°</span>
+        </span>
+      </div>
+    </div>
   );
 }
 
