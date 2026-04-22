@@ -8,25 +8,29 @@ concurrency:
   group: pages
   cancel-in-progress: false
 
+# Default to read-only; only the deploy job escalates to the minimum writes it needs.
 permissions:
-  contents: write
-  pages: write
-  id-token: write
+  contents: read
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write   # commit updated data files
+      pages: write      # deploy to GitHub Pages
+      id-token: write   # OIDC for deploy-pages
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Write status.json from HA payload
         env:
           PAYLOAD: ${{ toJson(github.event.client_payload) }}
         run: |
-          echo "$PAYLOAD" > status.json
+          # Validate JSON before writing to avoid persisting malformed payloads.
+          python3 -c "import json, os, sys; json.loads(os.environ['PAYLOAD']); sys.stdout.write(os.environ['PAYLOAD'])" > status.json
 
       - name: Append to history.json
         env:
@@ -77,11 +81,11 @@ jobs:
         run: |
           sed -i "s/SW_VERSION_PLACEHOLDER/${GITHUB_SHA::7}/g" sw.js
 
-      - uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
         with:
           path: '.'
 
-      - uses: actions/deploy-pages@v4
+      - uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5
         id: deployment
