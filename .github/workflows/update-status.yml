@@ -26,7 +26,21 @@ jobs:
         env:
           PAYLOAD: ${{ toJson(github.event.client_payload) }}
         run: |
-          echo "$PAYLOAD" > status.json
+          python3 << 'EOF'
+          import json, os, sys
+          raw = os.environ.get('PAYLOAD', '')
+          try:
+              data = json.loads(raw)
+          except (json.JSONDecodeError, ValueError) as e:
+              print(f"ERROR: client_payload is not valid JSON: {e}", file=sys.stderr)
+              sys.exit(1)
+          if not isinstance(data, dict):
+              print("ERROR: client_payload must be a JSON object", file=sys.stderr)
+              sys.exit(1)
+          with open('status.json', 'w') as f:
+              json.dump(data, f, separators=(',', ':'))
+          print(f"status.json: {len(data)} keys")
+          EOF
 
       - name: Append to history.json
         env:
