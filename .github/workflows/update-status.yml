@@ -77,6 +77,14 @@ jobs:
         run: |
           sed -i "s/SW_VERSION_PLACEHOLDER/${GITHUB_SHA::7}/g" sw.js
 
+      - name: Harden Content-Security-Policy (additive directives)
+        shell: bash
+        run: |
+          # Append `form-action 'self'` and `upgrade-insecure-requests` to the
+          # CSP meta tag in index.html at deploy time. These are additive and
+          # do not break any current resources.
+          sed -i "s|frame-ancestors 'none'\"|frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests\"|g" index.html
+
       - uses: actions/configure-pages@v5
 
       - uses: actions/upload-pages-artifact@v3
