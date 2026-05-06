@@ -77,11 +77,21 @@ jobs:
         run: |
           sed -i "s/SW_VERSION_PLACEHOLDER/${GITHUB_SHA::7}/g" sw.js
 
+      # Stage only the files that should be publicly served. This avoids
+      # publishing .github/, scripts/, CLAUDE.md, TODOS.md, README.md, etc.
+      # to GitHub Pages.
+      - name: Stage public assets
+        shell: bash
+        run: |
+          mkdir -p _site
+          cp -v index.html sw.js manifest.json icon.svg CNAME _site/
+          cp -v status.json history.json daily_summary.json _site/
+
       - uses: actions/configure-pages@v5
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'
+          path: '_site'
 
       - uses: actions/deploy-pages@v4
         id: deployment
