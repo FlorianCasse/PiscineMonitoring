@@ -18,24 +18,38 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
+  // Only handle GET — never cache POST/PUT/DELETE
+  if (e.request.method !== 'GET') return;
+
   const url = new URL(e.request.url);
+
+  // Only handle http(s); ignore chrome-extension://, data:, etc.
+  if (url.protocol !== 'https:' && url.protocol !== 'http:') return;
+
   // External requests (e.g. Open-Meteo API) bypass the cache entirely
-  if (url.hostname !== self.location.hostname) {
+  if (url.origin !== self.location.origin) {
     e.respondWith(fetch(e.request));
     return;
   }
+
   const isData = url.pathname.endsWith('status.json')
     || url.pathname.endsWith('history.json')
     || url.pathname.endsWith('daily_summary.json');
   e.respondWith(isData ? networkFirst(e.request) : cacheFirst(e.request));
 });
 
+// Only same-origin, non-redirected, 2xx responses may be cached.
+// Opaque / opaqueredirect / cors / error responses are never written.
+function isCacheable(res) {
+  return res && res.ok && res.type === 'basic' && !res.redirected;
+}
+
 async function cacheFirst(req) {
   const cached = await caches.match(req);
   if (cached) return cached;
   try {
     const res = await fetch(req);
-    if (res.ok) (await caches.open(CACHE)).put(req, res.clone());
+    if (isCacheable(res)) (await caches.open(CACHE)).put(req, res.clone());
     return res;
   } catch (_) {
     return new Response('Offline', { status: 503 });
@@ -46,7 +60,7 @@ async function networkFirst(req) {
   const cache = await caches.open(CACHE);
   try {
     const res = await fetch(req);
-    if (res.ok) cache.put(req, res.clone());
+    if (isCacheable(res)) cache.put(req, res.clone());
     return res;
   } catch (_) {
     const cached = await cache.match(req);
