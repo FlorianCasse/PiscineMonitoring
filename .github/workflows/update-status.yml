@@ -8,32 +8,60 @@ concurrency:
   group: pages
   cancel-in-progress: false
 
-permissions:
-  contents: write
-  pages: write
-  id-token: write
+permissions: {}
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Write status.json from HA payload
+      - name: Validate and write status.json from HA payload
         env:
           PAYLOAD: ${{ toJson(github.event.client_payload) }}
         run: |
-          echo "$PAYLOAD" > status.json
+          python3 << 'EOF'
+          import json, os, sys
+          raw = os.environ.get('PAYLOAD', '')
+          try:
+              p = json.loads(raw)
+          except (json.JSONDecodeError, ValueError) as exc:
+              print(f"ERROR: payload not valid JSON: {exc}", file=sys.stderr)
+              sys.exit(1)
+          if not isinstance(p, dict):
+              print("ERROR: payload must be a JSON object", file=sys.stderr)
+              sys.exit(1)
+          allowed = {
+              'updated_at': (str,),
+              'temp_water_c': (int, float, type(None)),
+              'temp_air_c': (int, float, type(None)),
+              'pump_on': (bool, type(None)),
+              'swimmable': (bool, type(None)),
+              'solar_energy_total_kwh': (int, float, type(None)),
+              'sensors_ok': (bool, type(None)),
+              'reason': (str, type(None)),
+          }
+          clean = {}
+          for key, types in allowed.items():
+              if key in p and isinstance(p[key], types):
+                  clean[key] = p[key]
+          with open('status.json', 'w') as fh:
+              json.dump(clean, fh)
+          EOF
 
       - name: Append to history.json
         env:
           PAYLOAD: ${{ toJson(github.event.client_payload) }}
         run: |
           python3 << 'EOF'
-          import json, os
+          import json, os, sys
           f = 'history.json'
           if os.path.exists(f):
               try:
@@ -43,14 +71,28 @@ jobs:
                   history = {"entries": []}
           else:
               history = {"entries": []}
-          p = json.loads(os.environ['PAYLOAD'])
+          try:
+              p = json.loads(os.environ.get('PAYLOAD', ''))
+          except (json.JSONDecodeError, ValueError):
+              print("ERROR: payload not valid JSON; skipping append", file=sys.stderr)
+              sys.exit(1)
+          if not isinstance(p, dict):
+              print("ERROR: payload must be a JSON object; skipping append", file=sys.stderr)
+              sys.exit(1)
+          def num_or_none(v):
+              return v if isinstance(v, (int, float)) and not isinstance(v, bool) else None
+          def bool_or_none(v):
+              return v if isinstance(v, bool) else None
+          ts = p.get("updated_at", "")
+          if not isinstance(ts, str):
+              ts = ""
           history["entries"].append({
-              "ts": p.get("updated_at", ""),
-              "temp_water_c": p.get("temp_water_c"),
-              "temp_air_c": p.get("temp_air_c"),
-              "pump_on": p.get("pump_on"),
-              "swimmable": p.get("swimmable"),
-              "solar_energy_total_kwh": p.get("solar_energy_total_kwh")
+              "ts": ts,
+              "temp_water_c": num_or_none(p.get("temp_water_c")),
+              "temp_air_c": num_or_none(p.get("temp_air_c")),
+              "pump_on": bool_or_none(p.get("pump_on")),
+              "swimmable": bool_or_none(p.get("swimmable")),
+              "solar_energy_total_kwh": num_or_none(p.get("solar_energy_total_kwh"))
           })
           if len(history["entries"]) > 2016:
               history["entries"] = history["entries"][-2016:]
