@@ -1,28 +1,45 @@
 # PiscineMonitoring
 
-Real-time pool dashboard powered by Home Assistant + GitHub Pages. Updates every 5 minutes via GitHub Actions.
+Real-time pool dashboard powered by Home Assistant + GitHub Pages. Home Assistant samples
+every 5 minutes and dispatches a batched update every 30 minutes to keep Actions usage low.
 
 ## HA dispatch payload
 
-Home Assistant triggers a `repository_dispatch` event with this payload:
+Home Assistant triggers a `repository_dispatch` event with a **batch** of recent readings:
 
 ```json
 {
   "event_type": "update_pool_status",
   "client_payload": {
-    "updated_at":              "2026-04-09T14:30:00+02:00",
-    "temp_water_c":            17.4,
-    "temp_air_c":              22.1,
-    "pump_on":                 true,
-    "pump_power_w":            750,
-    "swimmable":               false,
-    "solar_power_w":           2800,
-    "solar_energy_total_kwh":  11582.4,
-    "sensors_ok":              true,
-    "reason":                  "Température trop basse"
+    "entries": [
+      {
+        "updated_at":              "2026-04-09T14:00:00+02:00",
+        "temp_water_c":            17.2,
+        "temp_air_c":              21.8,
+        "pump_on":                 true,
+        "swimmable":               false,
+        "solar_energy_total_kwh":  11581.9
+      },
+      {
+        "updated_at":              "2026-04-09T14:30:00+02:00",
+        "temp_water_c":            17.4,
+        "temp_air_c":              22.1,
+        "pump_on":                 true,
+        "pump_power_w":            750,
+        "swimmable":               false,
+        "solar_power_w":           2800,
+        "solar_energy_total_kwh":  11582.4,
+        "sensors_ok":              true,
+        "reason":                  "Température trop basse"
+      }
+    ]
   }
 }
 ```
+
+The last entry of `entries` becomes the new `status.json` (what the dashboard reads). Each
+entry is appended to `history.json`. The legacy single-payload format (fields at the top
+of `client_payload`, no `entries` array) is still accepted and treated as a 1-entry batch.
 
 **Notes:**
 - `solar_energy_total_kwh` is the cumulative lifetime counter from the inverter (not daily production).
@@ -31,15 +48,13 @@ Home Assistant triggers a `repository_dispatch` event with this payload:
 
 ## GitHub Actions setup
 
-The workflow in `.github/workflows/update-status.yml` runs on every `repository_dispatch` event.
+The workflow in `.github/workflows/update-status.yml` runs on every `repository_dispatch`
+event. It only needs `contents: write` (commit data files); GitHub Pages is deployed by
+the built-in `pages-build-deployment` workflow which is free (not counted against Actions
+minutes). No additional secrets needed beyond `GITHUB_TOKEN` (automatic).
 
-Required permissions (already set in the workflow file):
-- `contents: write` — for committing `history.json` + `daily_summary.json`
-- `pages: write` + `id-token: write` — for deploying GitHub Pages
-
-No additional secrets needed beyond `GITHUB_TOKEN` (automatic).
-
-Enable GitHub Pages in repo settings: **Settings → Pages → Source → GitHub Actions**.
+Enable GitHub Pages in repo settings: **Settings → Pages → Source → Deploy from a branch
+→ `main` / `/` (root)**. Do NOT pick "GitHub Actions" — that mode bills extra minutes.
 
 ## localStorage keys
 
@@ -72,6 +87,7 @@ python3 scripts/backfill_daily_summary.py   # seeds from history.json
 
 | Script | Purpose |
 |--------|---------|
-| `scripts/aggregate_daily.py` | Aggregation module (called by Actions workflow) |
+| `scripts/apply_payload.py` | Workflow entry-point — reads `PAYLOAD`, updates status/history/summary/sw.js |
+| `scripts/aggregate_daily.py` | Aggregation helpers (pure functions, imported by `apply_payload.py`) |
 | `scripts/test_daily_summary.py` | Test suite — run before merging: `python3 scripts/test_daily_summary.py` |
 | `scripts/backfill_daily_summary.py` | One-time backfill from history.json |
