@@ -128,18 +128,36 @@ async function tryFetch(path) {
   } catch (_) { return null; }
 }
 
-// Fetch Open-Meteo forecast (7-day + current humidity/wind/uv)
+// Fetch Open-Meteo forecast (7-day + current humidity/wind/uv).
+// Validates coordinate ranges and deduplicates in-flight calls with a 5-minute
+// memoization cache to avoid hammering the API from concurrent loadHouseData()
+// calls or page reloads.
+let _meteoCache = { key: null, ts: 0, promise: null };
+const METEO_TTL_MS = 5 * 60 * 1000;
+function _isValidCoord(lat, lon) {
+  return Number.isFinite(lat) && Number.isFinite(lon)
+    && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180;
+}
 async function fetchMeteo(lat, lon) {
-  if (!lat || !lon) return null;
-  try {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}`
-      + `&current=relative_humidity_2m,wind_speed_10m,wind_direction_10m,uv_index,apparent_temperature`
-      + `&daily=weather_code,temperature_2m_max,temperature_2m_min`
-      + `&forecast_days=7&timezone=auto`;
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    return await res.json();
-  } catch (_) { return null; }
+  if (!_isValidCoord(lat, lon)) return null;
+  const key = `${lat.toFixed(4)},${lon.toFixed(4)}`;
+  const now = Date.now();
+  if (_meteoCache.key === key && _meteoCache.promise && (now - _meteoCache.ts) < METEO_TTL_MS) {
+    return _meteoCache.promise;
+  }
+  const promise = (async () => {
+    try {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}`
+        + `&current=relative_humidity_2m,wind_speed_10m,wind_direction_10m,uv_index,apparent_temperature`
+        + `&daily=weather_code,temperature_2m_max,temperature_2m_min`
+        + `&forecast_days=7&timezone=auto`;
+      const res = await fetch(url);
+      if (!res.ok) return null;
+      return await res.json();
+    } catch (_) { return null; }
+  })();
+  _meteoCache = { key, ts: now, promise };
+  return promise;
 }
 
 // Weather code → icon id (sun | cloud-sun | cloud | rain)
@@ -356,8 +374,10 @@ function buildHouseData(status, daily, history, meteo) {
   const stale = ageMin > STALE_MINUTES;
 
   // Fake-data friendly fallbacks used only when the real field is missing
-  const lat = parseFloat(safeGet('piscine_lat', '43.79')) || 43.79;
-  const lon = parseFloat(safeGet('piscine_lon', '4.83'))  || 4.83;
+  let lat = parseFloat(safeGet('piscine_lat', '43.79'));
+  let lon = parseFloat(safeGet('piscine_lon', '4.83'));
+  if (!Number.isFinite(lat) || lat < -90 || lat > 90) lat = 43.79;
+  if (!Number.isFinite(lon) || lon < -180 || lon > 180) lon = 4.83;
 
   return {
     location: { name: safeGet('piscine_location', 'Maison'), lat, lon },
@@ -411,8 +431,10 @@ function buildHouseData(status, daily, history, meteo) {
 }
 
 async function loadHouseData() {
-  const lat = parseFloat(safeGet('piscine_lat', '43.79')) || 43.79;
-  const lon = parseFloat(safeGet('piscine_lon', '4.83'))  || 4.83;
+  let lat = parseFloat(safeGet('piscine_lat', '43.79'));
+  let lon = parseFloat(safeGet('piscine_lon', '4.83'));
+  if (!Number.isFinite(lat) || lat < -90 || lat > 90) lat = 43.79;
+  if (!Number.isFinite(lon) || lon < -180 || lon > 180) lon = 4.83;
   const [status, daily, history, meteo] = await Promise.all([
     tryFetch('status.json'),
     tryFetch('daily_summary.json'),

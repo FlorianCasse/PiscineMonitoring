@@ -42,14 +42,35 @@ async function cacheFirst(req) {
   }
 }
 
+const DATA_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+
 async function networkFirst(req) {
   const cache = await caches.open(CACHE);
   try {
     const res = await fetch(req);
-    if (res.ok) cache.put(req, res.clone());
+    if (res.ok) {
+      const cloned = res.clone();
+      const headers = new Headers(cloned.headers);
+      headers.set('x-cached-at', String(Date.now()));
+      const body = await cloned.blob();
+      cache.put(req, new Response(body, { status: cloned.status, statusText: cloned.statusText, headers }));
+    }
     return res;
   } catch (_) {
     const cached = await cache.match(req);
-    return cached || new Response('{}', { status: 503, headers: { 'Content-Type': 'application/json' } });
+    if (cached) {
+      const cachedAt = parseInt(cached.headers.get('x-cached-at') || '0', 10);
+      if (cachedAt && Date.now() - cachedAt > DATA_CACHE_MAX_AGE_MS) {
+        return new Response(JSON.stringify({ entries: [] }), {
+          status: 503,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      return cached;
+    }
+    return new Response(JSON.stringify({ entries: [] }), {
+      status: 503,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 }
