@@ -114,7 +114,7 @@
 <script>
 /* ========== Data pipeline (vanilla, runs before React) ========== */
 
-const STALE_MINUTES = 15;
+const STALE_MINUTES = 40;
 const SEASON_START_MONTH = 4; // April — week/month totals scope
 const POOL_TARGET = 26;
 const SOLAR_CAPACITY_KW = 6.4;
@@ -429,7 +429,7 @@ window.__dataReady.then(data => {
   if (data && data.stale) {
     const b = document.getElementById('stale-banner');
     b.classList.add('visible');
-    b.textContent = 'Données non actualisées depuis plus de 15 min';
+    b.textContent = `Données non actualisées depuis plus de ${STALE_MINUTES} min`;
   }
 });
 </script>
