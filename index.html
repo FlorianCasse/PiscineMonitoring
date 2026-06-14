@@ -134,8 +134,8 @@ async function fetchMeteo(lat, lon) {
   try {
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}`
       + `&current=relative_humidity_2m,wind_speed_10m,wind_direction_10m,uv_index,apparent_temperature`
-      + `&daily=weather_code,temperature_2m_max,temperature_2m_min`
-      + `&forecast_days=7&timezone=auto`;
+      + `&daily=weather_code,temperature_2m_max,temperature_2m_min,temperature_2m_mean,shortwave_radiation_sum`
+      + `&past_days=60&forecast_days=7&timezone=auto`;
     const res = await fetch(url);
     if (!res.ok) return null;
     return await res.json();
@@ -265,6 +265,100 @@ function safeSet(key, value) {
   try { localStorage.setItem(key, value); } catch (_) {}
 }
 
+/* ===== Pool water forecast (self-calibrated daily energy balance) =====
+   Model: W_{j+1} - W_j = a*(A_j - W_j) + b*R_j + c
+   - W = avg water temp (daily_summary), A = mean air temp, R = solar radiation (both Open-Meteo)
+   a,b,c fitted by ordinary least squares on consecutive-day pairs from the pool's own history,
+   so the model self-calibrates to this specific pool. */
+
+function dayDiffDays(d0, d1) {
+  const a = new Date(d0 + 'T00:00:00'), b = new Date(d1 + 'T00:00:00');
+  return Math.round((b - a) / 86400000);
+}
+
+// Solve a 3x3 linear system A x = y (Gaussian elimination, partial pivoting). null if singular.
+function solve3x3(A, y) {
+  const M = [
+    [A[0][0], A[0][1], A[0][2], y[0]],
+    [A[1][0], A[1][1], A[1][2], y[1]],
+    [A[2][0], A[2][1], A[2][2], y[2]],
+  ];
+  for (let col = 0; col < 3; col++) {
+    let piv = col;
+    for (let r = col + 1; r < 3; r++) if (Math.abs(M[r][col]) > Math.abs(M[piv][col])) piv = r;
+    if (Math.abs(M[piv][col]) < 1e-12) return null;
+    [M[col], M[piv]] = [M[piv], M[col]];
+    for (let r = 0; r < 3; r++) {
+      if (r === col) continue;
+      const f = M[r][col] / M[col][col];
+      for (let k = col; k < 4; k++) M[r][k] -= f * M[col][k];
+    }
+  }
+  return [M[0][3] / M[0][0], M[1][3] / M[1][1], M[2][3] / M[2][2]];
+}
+
+function fitThermalModel(dailyEntries, meteoDaily) {
+  if (!dailyEntries || !meteoDaily || !meteoDaily.time) return { ok: false, n: 0 };
+  // date -> { air, rad } from Open-Meteo (past days included)
+  const time = meteoDaily.time;
+  const tmean = meteoDaily.temperature_2m_mean || [];
+  const tmax = meteoDaily.temperature_2m_max || [];
+  const tmin = meteoDaily.temperature_2m_min || [];
+  const rad  = meteoDaily.shortwave_radiation_sum || [];
+  const drivers = {};
+  for (let i = 0; i < time.length; i++) {
+    let air = tmean[i];
+    if (air == null && tmax[i] != null && tmin[i] != null) air = (tmax[i] + tmin[i]) / 2;
+    if (air == null) continue;
+    drivers[time[i]] = { air, rad: rad[i] != null ? rad[i] : null };
+  }
+  // date -> avg water temp
+  const water = {};
+  for (const e of dailyEntries) if (e.avg_water_c != null) water[e.date] = +e.avg_water_c;
+  const dates = Object.keys(water).sort();
+  // training rows for consecutive calendar days present in both sources
+  const rows = [];
+  for (let i = 0; i < dates.length - 1; i++) {
+    const d0 = dates[i], d1 = dates[i + 1];
+    if (dayDiffDays(d0, d1) !== 1) continue;
+    const drv = drivers[d0];
+    if (!drv || drv.rad == null) continue;
+    rows.push({ f: [drv.air - water[d0], drv.rad, 1], y: water[d1] - water[d0] });
+  }
+  if (rows.length < 10) return { ok: false, n: rows.length };
+  // normal equations (X^T X) beta = X^T y
+  const XtX = [[0,0,0],[0,0,0],[0,0,0]];
+  const Xty = [0,0,0];
+  for (const r of rows) {
+    for (let a = 0; a < 3; a++) {
+      Xty[a] += r.f[a] * r.y;
+      for (let b = 0; b < 3; b++) XtX[a][b] += r.f[a] * r.f[b];
+    }
+  }
+  const beta = solve3x3(XtX, Xty);
+  if (!beta) return { ok: false, n: rows.length };
+  const [a, b, c] = beta;
+  let ss = 0;
+  for (const r of rows) { const p = a*r.f[0] + b*r.f[1] + c*r.f[2]; ss += (r.y - p) ** 2; }
+  const resStd = Math.sqrt(ss / Math.max(1, rows.length - 3));
+  return { ok: true, a, b, c, n: rows.length, resStd };
+}
+
+// Roll the model forward from W0 over upcoming days. futureDrivers: [{iso,date,air,rad}].
+function forecastWater(model, W0, futureDrivers) {
+  if (!model || !model.ok || W0 == null) return [];
+  const out = [];
+  let W = W0;
+  for (const fd of futureDrivers) {
+    if (fd.air == null || fd.rad == null) break;
+    let dW = model.a * (fd.air - W) + model.b * fd.rad + model.c;
+    dW = Math.max(-1.5, Math.min(1.5, dW));           // clamp daily swing
+    W = Math.max(5, Math.min(35, W + dW));            // clamp to plausible water range
+    out.push({ iso: fd.iso, date: fd.date, w: +W.toFixed(1) });
+  }
+  return out;
+}
+
 function buildHouseData(status, daily, history, meteo) {
   const now = new Date();
   const entries = (history && history.entries) || [];
@@ -329,8 +423,14 @@ function buildHouseData(status, daily, history, meteo) {
       uv: meteo.current.uv_index != null ? Math.round(meteo.current.uv_index) : null,
     };
   }
+  // With past_days set, index 0 is no longer today — slice the 7 forecast days from today's index.
+  let todayIdx = 0;
   if (meteo && meteo.daily && meteo.daily.time) {
-    forecast = meteo.daily.time.slice(0, 7).map((iso, i) => {
+    const days = meteo.daily.time;
+    todayIdx = days.indexOf(todayIso);
+    if (todayIdx < 0) todayIdx = 0;
+    forecast = days.slice(todayIdx, todayIdx + 7).map((iso, j) => {
+      const i = todayIdx + j;
       const d = new Date(iso + 'T12:00:00');
       return {
         iso,
@@ -340,6 +440,31 @@ function buildHouseData(status, daily, history, meteo) {
         icon: wmoToIcon(meteo.daily.weather_code[i]),
       };
     });
+  }
+
+  // Pool water temperature forecast (self-calibrated thermal model)
+  let poolForecast = { ok: false, n: 0, past: [], future: [], deltaWeek: null };
+  if (meteo && meteo.daily && meteo.daily.time) {
+    const model = fitThermalModel(dailyEntries, meteo.daily);
+    const past = dailyEntries.slice(-7)
+      .filter(e => e.avg_water_c != null)
+      .map(e => ({ iso: e.date, date: new Date(e.date + 'T12:00:00'), w: +(+e.avg_water_c).toFixed(1) }));
+    const days = meteo.daily.time;
+    const tmean = meteo.daily.temperature_2m_mean || [];
+    const tmax  = meteo.daily.temperature_2m_max || [];
+    const tmin  = meteo.daily.temperature_2m_min || [];
+    const rad   = meteo.daily.shortwave_radiation_sum || [];
+    const futureDrivers = [];
+    for (let i = todayIdx + 1; i < days.length && futureDrivers.length < 7; i++) {
+      let air = tmean[i];
+      if (air == null && tmax[i] != null && tmin[i] != null) air = (tmax[i] + tmin[i]) / 2;
+      futureDrivers.push({ iso: days[i], date: new Date(days[i] + 'T12:00:00'), air, rad: rad[i] != null ? rad[i] : null });
+    }
+    const W0 = (status && status.temp_water_c != null) ? +status.temp_water_c
+             : (todayEntry && todayEntry.avg_water_c != null ? +todayEntry.avg_water_c : null);
+    const future = forecastWater(model, W0, futureDrivers);
+    const deltaWeek = (future.length && W0 != null) ? +(future[future.length - 1].w - W0).toFixed(1) : null;
+    poolForecast = { ok: model.ok && future.length > 0, n: model.n || 0, past, future, deltaWeek, w0: W0 };
   }
 
   // Filtration: derive today's runs from history; state from status
@@ -378,6 +503,8 @@ function buildHouseData(status, daily, history, meteo) {
       weekMin: poolWeekMin,
       weekMax: poolWeekMax,
     },
+
+    poolForecast,
 
     outdoor: {
       temp: airTemp,
@@ -451,6 +578,14 @@ const STATUS = {
       warm:          { title: 'Tiède',           sub: 'Comme un bain',              tone: 'warm' },
     },
     outdoor: { label: 'Extérieur' },
+    forecast: {
+      label: 'Tendance de l’eau',
+      past: 'Réel', future: 'Prévu', in7: 'dans 7 j',
+      rise: (d) => `+${d.toFixed(1)}° d’ici 7 jours`,
+      drop: (d) => `${d.toFixed(1)}° d’ici 7 jours`,
+      flat: 'Stable cette semaine',
+      calibrating: (n) => `Calibration en cours — ${n}/10 jours`,
+    },
     solar:   { label: 'Solaire',  live: 'En direct' },
     filt:    { label: 'Filtration', on: 'En marche', off: 'À l\u2019arrêt', nextDefault: 'Aucune session prévue' },
     today: 'Aujourd\u2019hui',
@@ -480,6 +615,14 @@ const STATUS = {
       warm:          { title: 'Warm',        sub: 'Like a bath',          tone: 'warm' },
     },
     outdoor: { label: 'Outside' },
+    forecast: {
+      label: 'Water trend',
+      past: 'Actual', future: 'Forecast', in7: 'in 7 d',
+      rise: (d) => `+${d.toFixed(1)}° over 7 days`,
+      drop: (d) => `${d.toFixed(1)}° over 7 days`,
+      flat: 'Steady this week',
+      calibrating: (n) => `Calibrating — ${n}/10 days`,
+    },
     solar:   { label: 'Solar', live: 'Live' },
     filt:    { label: 'Pump',  on: 'Running', off: 'Idle', nextDefault: 'No session scheduled' },
     today: 'Today',
@@ -951,6 +1094,82 @@ function MinMaxRow({ label, min, max, color }) {
   );
 }
 
+function PoolForecastCard({ data, t }) {
+  const color = '#6fb9ff';
+  const uid = React.useId();
+
+  if (!data || !data.ok) {
+    return (
+      <Card>
+        <MicroLabel>{t.forecast.label}</MicroLabel>
+        <div style={{ marginTop: 12, fontSize: 12, color: 'var(--ink-faint)', fontFamily: 'JetBrains Mono, monospace' }}>
+          {t.forecast.calibrating(data ? data.n : 0)}
+        </div>
+      </Card>
+    );
+  }
+
+  const past = data.past, future = data.future;
+  const all = [...past, ...future];
+  const width = 320, height = 96;
+  const values = all.map(p => p.w);
+  const min = Math.min(...values), max = Math.max(...values);
+  const range = (max - min) || 1;
+  const step = width / (all.length - 1);
+  const coords = all.map((p, i) => [i * step, height - ((p.w - min) / range) * (height - 16) - 8]);
+  const pIdx = past.length - 1; // junction (today)
+  const solidPts = coords.slice(0, past.length);
+  const dashPts = coords.slice(pIdx); // start at junction so the two segments connect
+  const solidD = solidPts.map((p, i) => (i === 0 ? `M${p[0]},${p[1]}` : `L${p[0]},${p[1]}`)).join(' ');
+  const dashD = dashPts.map((p, i) => (i === 0 ? `M${p[0]},${p[1]}` : `L${p[0]},${p[1]}`)).join(' ');
+  const solidArea = `${solidD} L${coords[pIdx][0]},${height} L0,${height} Z`;
+  const todayX = coords[pIdx][0];
+
+  const dw = data.deltaWeek;
+  const summary = dw == null ? '' : (dw > 0.2 ? t.forecast.rise(dw) : dw < -0.2 ? t.forecast.drop(dw) : t.forecast.flat);
+  const lastW = future[future.length - 1].w;
+
+  return (
+    <Card>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+        <MicroLabel>{t.forecast.label}</MicroLabel>
+        <span className="num" style={{ fontSize: 11, color, fontFamily: 'JetBrains Mono, monospace' }}>
+          ≈ {lastW.toFixed(1)}° · {t.forecast.in7}
+        </span>
+      </div>
+
+      <div style={{ marginTop: 14 }}>
+        <svg width="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" style={{ display: 'block', overflow: 'visible' }}>
+          <defs>
+            <linearGradient id={`pfg-${uid}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor={color} stopOpacity="0.26"/>
+              <stop offset="1" stopColor={color} stopOpacity="0"/>
+            </linearGradient>
+          </defs>
+          <path d={solidArea} fill={`url(#pfg-${uid})`}/>
+          <line x1={todayX} x2={todayX} y1={0} y2={height} stroke="var(--ink-faint)" strokeOpacity="0.5" strokeWidth="1" strokeDasharray="2 3" vectorEffect="non-scaling-stroke"/>
+          <path d={solidD} fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d={dashD} fill="none" stroke={color} strokeOpacity="0.75" strokeWidth="1.8" strokeDasharray="4 3" strokeLinecap="round" strokeLinejoin="round"/>
+          <circle cx={coords[pIdx][0]} cy={coords[pIdx][1]} r="3.5" fill={color} stroke="rgba(5,9,14,0.9)" strokeWidth="2"/>
+          <circle cx={coords[coords.length - 1][0]} cy={coords[coords.length - 1][1]} r="3" fill="none" stroke={color} strokeWidth="1.6"/>
+        </svg>
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, fontSize: 11, fontFamily: 'JetBrains Mono, monospace', color: 'var(--ink-dim)' }}>
+        <span style={{ display: 'inline-flex', gap: 12 }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+            <span style={{ width: 14, borderTop: `2px solid ${color}` }}/> {t.forecast.past}
+          </span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+            <span style={{ width: 14, borderTop: `2px dashed ${color}` }}/> {t.forecast.future}
+          </span>
+        </span>
+        {summary && <span style={{ color }}>{summary}</span>}
+      </div>
+    </Card>
+  );
+}
+
 function OutdoorCard({ data, t, lang }) {
   const hasTemp = data.temp != null && Number.isFinite(data.temp);
   const hasForecast = data.forecast && data.forecast.length > 0;
@@ -1228,6 +1447,11 @@ function HorizonView({ data, lang, t, nowHour }) {
       <div className="rise" style={{ animationDelay: '0.15s' }}>
         <PoolHero data={data.pool} t={t}/>
       </div>
+      {data.poolForecast && (
+        <div className="rise" style={{ marginTop: 12, animationDelay: '0.2s' }}>
+          <PoolForecastCard data={data.poolForecast} t={t}/>
+        </div>
+      )}
       <div className="rise" style={{ marginTop: 12, animationDelay: '0.25s' }}>
         <SolarCard data={data.solar} t={t} lang={lang} nowHour={nowHour}/>
       </div>
