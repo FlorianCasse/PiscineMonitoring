@@ -1,7 +1,8 @@
 # PiscineMonitoring
 
-Real-time pool dashboard powered by Home Assistant + GitHub Pages. Home Assistant samples
-every 5 minutes and dispatches a batched update every 30 minutes to keep Actions usage low.
+Real-time pool dashboard powered by Home Assistant + GitHub Pages. Home Assistant may
+dispatch readings every 30 minutes, but GitHub Actions only processes the four payloads
+containing a reading at 00:00, 06:00, 12:00, or 18:00 local time.
 
 ## HA dispatch payload
 
@@ -48,8 +49,17 @@ of `client_payload`, no `entries` array) is still accepted and treated as a 1-en
 
 ## GitHub Actions setup
 
-The workflow in `.github/workflows/update-status.yml` runs on every `repository_dispatch`
-event. It only needs `contents: write` (commit data files); GitHub Pages is deployed by
+The workflow in `.github/workflows/update-status.yml` is triggered by every
+`repository_dispatch` event, but its job only starts when the serialized payload contains
+an `updated_at` timestamp at 00:00, 06:00, 12:00, or 18:00 local time. Other workflow runs
+are marked as skipped before a runner is allocated. The filter searches the full payload,
+so both the batch and legacy single-reading formats are supported.
+
+With the current single-reading payloads, only four measurements per day are stored.
+Intermediate readings are intentionally discarded, so detailed daily duration metrics
+such as pump-on and swimmable minutes are approximate.
+
+The workflow only needs `contents: write` (commit data files); GitHub Pages is deployed by
 the built-in `pages-build-deployment` workflow which is free (not counted against Actions
 minutes). No additional secrets needed beyond `GITHUB_TOKEN` (automatic).
 
