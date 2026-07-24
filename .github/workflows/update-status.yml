@@ -13,6 +13,11 @@ permissions:
 
 jobs:
   update:
+    if: >-
+      contains(toJson(github.event.client_payload), 'T00:00:') ||
+      contains(toJson(github.event.client_payload), 'T06:00:') ||
+      contains(toJson(github.event.client_payload), 'T12:00:') ||
+      contains(toJson(github.event.client_payload), 'T18:00:')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
