@@ -1,1 +1,1 @@
-{"pump_on": true, "pump_power_w": 417, "reason": "Eau OK pour se baigner !", "sensors_ok": true, "solar_energy_total_kwh": 14346.88, "solar_power_w": 1451.7, "swimmable": true, "temp_air_c": 34.8, "temp_water_c": 29.6, "updated_at": "2026-07-30T18:00:00.436900+02:00"}
+{"pump_on": false, "pump_power_w": 0, "reason": "Pompe arretee - filtration requise", "sensors_ok": true, "solar_energy_total_kwh": 14348.71, "solar_power_w": -6.4, "swimmable": false, "temp_air_c": 25.8, "temp_water_c": 29.1, "updated_at": "2026-07-31T00:00:00.436450+02:00"}
