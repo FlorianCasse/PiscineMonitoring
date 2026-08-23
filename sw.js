@@ -1,6 +1,15 @@
 const CACHE = 'piscine-SW_VERSION_PLACEHOLDER';
 const STATIC = ['./', './index.html', './manifest.json', './icon.svg'];
 
+// Hosts the app legitimately fetches from. Anything else is refused by the SW
+// so a future XSS or extension cannot turn the SW into an open proxy.
+const ALLOWED_EXTERNAL_HOSTS = new Set([
+  'api.open-meteo.com',
+  'fonts.googleapis.com',
+  'fonts.gstatic.com',
+  'unpkg.com',
+]);
+
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE)
@@ -18,12 +27,22 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
+  // Only handle GET. Anything else (POST/PUT/etc.) is left to the network so
+  // the SW can never inadvertently cache mutating requests.
+  if (e.request.method !== 'GET') return;
+
   const url = new URL(e.request.url);
-  // External requests (e.g. Open-Meteo API) bypass the cache entirely
+
   if (url.hostname !== self.location.hostname) {
-    e.respondWith(fetch(e.request));
+    // Cross-origin: only proxy hosts the app actually uses.
+    if (ALLOWED_EXTERNAL_HOSTS.has(url.hostname)) {
+      e.respondWith(fetch(e.request));
+    } else {
+      e.respondWith(new Response('Blocked by service worker', { status: 403 }));
+    }
     return;
   }
+
   const isData = url.pathname.endsWith('status.json')
     || url.pathname.endsWith('history.json')
     || url.pathname.endsWith('daily_summary.json');
