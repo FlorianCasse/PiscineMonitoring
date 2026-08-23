@@ -19,11 +19,12 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
-  // External requests (e.g. Open-Meteo API) bypass the cache entirely
-  if (url.hostname !== self.location.hostname) {
-    e.respondWith(fetch(e.request));
-    return;
-  }
+  // Only handle same-origin GET requests. Cross-origin traffic (Open-Meteo API,
+  // Google Fonts, unpkg CDN, etc.) is left to the browser so the service worker
+  // is never in the response chain for traffic it does not own.
+  if (url.origin !== self.location.origin) return;
+  if (e.request.method !== 'GET') return;
+
   const isData = url.pathname.endsWith('status.json')
     || url.pathname.endsWith('history.json')
     || url.pathname.endsWith('daily_summary.json');
