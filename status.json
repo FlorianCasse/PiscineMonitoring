@@ -1,1 +1,1 @@
-{"pump_on": false, "pump_power_w": 0, "reason": "Pompe arretee - filtration requise", "sensors_ok": true, "solar_energy_total_kwh": 14930.23, "solar_power_w": -6.3, "swimmable": false, "temp_air_c": 18.9, "temp_water_c": 27, "updated_at": "2026-08-25T00:00:00.354780+02:00"}
+{"pump_on": false, "pump_power_w": 0, "reason": "Pompe arretee - filtration requise", "sensors_ok": true, "solar_energy_total_kwh": 14930.24, "solar_power_w": -1.9, "swimmable": false, "temp_air_c": 17, "temp_water_c": 26.3, "updated_at": "2026-08-25T06:00:00.354695+02:00"}
