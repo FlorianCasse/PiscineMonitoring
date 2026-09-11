@@ -480,9 +480,14 @@ function buildHouseData(status, daily, history, meteo) {
   const ageMin = updatedAt ? (now - updatedAt) / 60000 : Infinity;
   const stale = ageMin > STALE_MINUTES;
 
-  // Fake-data friendly fallbacks used only when the real field is missing
-  const lat = parseFloat(safeGet('piscine_lat', '43.79')) || 43.79;
-  const lon = parseFloat(safeGet('piscine_lon', '4.83'))  || 4.83;
+  // Pool coordinates are user-set via localStorage. We do NOT ship a default:
+  // a hardcoded fallback would (a) leak an arbitrary location to every first-time
+  // visitor of the public dashboard, and (b) trigger an Open-Meteo request the
+  // user never opted into. Missing coordinates ⇒ no forecast, no header readout.
+  const latRaw = parseFloat(safeGet('piscine_lat', ''));
+  const lonRaw = parseFloat(safeGet('piscine_lon', ''));
+  const lat = Number.isFinite(latRaw) ? latRaw : null;
+  const lon = Number.isFinite(lonRaw) ? lonRaw : null;
 
   return {
     location: { name: safeGet('piscine_location', 'Maison'), lat, lon },
@@ -538,8 +543,13 @@ function buildHouseData(status, daily, history, meteo) {
 }
 
 async function loadHouseData() {
-  const lat = parseFloat(safeGet('piscine_lat', '43.79')) || 43.79;
-  const lon = parseFloat(safeGet('piscine_lon', '4.83'))  || 4.83;
+  // No hardcoded GPS default: if the user has not set piscine_lat/piscine_lon
+  // in localStorage, lat/lon are null and fetchMeteo() returns null without
+  // making a network request to Open-Meteo.
+  const latRaw = parseFloat(safeGet('piscine_lat', ''));
+  const lonRaw = parseFloat(safeGet('piscine_lon', ''));
+  const lat = Number.isFinite(latRaw) ? latRaw : null;
+  const lon = Number.isFinite(lonRaw) ? lonRaw : null;
   const [status, daily, history, meteo] = await Promise.all([
     tryFetch('status.json'),
     tryFetch('daily_summary.json'),
@@ -1424,8 +1434,8 @@ function HorizonView({ data, lang, t, nowHour }) {
         </div>
         <div style={{ textAlign: 'right', fontFamily: 'JetBrains Mono, monospace', fontSize: 11, color: 'var(--ink-faint)' }}>
           <div className="num" style={{ color: 'var(--ink)', fontSize: 13 }}>{timeStr}</div>
-          <div className="num">{data.location.lat.toFixed(2)}°N</div>
-          <div className="num">{data.location.lon.toFixed(2)}°E</div>
+          {data.location.lat != null && <div className="num">{data.location.lat.toFixed(2)}°N</div>}
+          {data.location.lon != null && <div className="num">{data.location.lon.toFixed(2)}°E</div>}
         </div>
       </div>
 
