@@ -2,3 +2,12 @@
 .gstack/
 __pycache__/
 *.pyc
+
+# Environment variables
+.env
+.env.*
+*.key
+*.pem
+*.p12
+credentials.json
+secrets.*

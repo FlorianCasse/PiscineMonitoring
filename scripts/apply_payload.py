@@ -7,6 +7,7 @@
 #   batch:  {"entries": [{updated_at, temp_water_c, ...}, ...]}
 #   single: {updated_at, temp_water_c, ...}   (legacy — wrapped into entries=[payload])
 
+import hashlib
 import json
 import os
 import re
@@ -51,15 +52,15 @@ def entry_to_history(p):
 def bump_sw_version(version):
     if not os.path.exists(SW_FILE):
         return
-    sw = open(SW_FILE).read()
+    sw = open(SW_FILE, encoding='utf-8').read()
     new_sw = re.sub(
-        r"const CACHE = 'piscine-[^']+';",
+        r"const CACHE = 'piscine-[^']+';\br",
         f"const CACHE = 'piscine-{version}';",
         sw,
         count=1,
     )
     if new_sw != sw:
-        open(SW_FILE, 'w').write(new_sw)
+        open(SW_FILE, 'w', encoding='utf-8').write(new_sw)
 
 
 def main():
@@ -74,9 +75,13 @@ def main():
         print('WARNING: payload contains no entries — nothing to do')
         return
 
+    if len(entries) > 100:
+        print(f"ERROR: batch too large ({len(entries)} entries, max 100)", file=sys.stderr)
+        sys.exit(1)
+
     # ── status.json: latest entry only (dashboard reads this) ────────────────
     latest = entries[-1]
-    open(STATUS_FILE, 'w').write(json.dumps(latest))
+    open(STATUS_FILE, 'w', encoding='utf-8').write(json.dumps(latest))
 
     # ── history.json: append all entries, trim to HISTORY_MAX_ENTRIES ────────
     history = load_summary(HISTORY_FILE)
@@ -87,7 +92,7 @@ def main():
         history_entries = history_entries[-HISTORY_MAX_ENTRIES:]
     history['entries'] = history_entries
     history['updated_at'] = history_entries[-1]['ts'] if history_entries else ''
-    open(HISTORY_FILE, 'w').write(json.dumps(history))
+    open(HISTORY_FILE, 'w', encoding='utf-8').write(json.dumps(history))
     print(f"history.json: {len(history_entries)} entries (+{len(entries)})")
 
     # ── daily_summary.json: re-aggregate every day touched by this batch ─────
@@ -111,12 +116,12 @@ def main():
 
     summary['season_start'] = compute_season_start(summary.get('entries', []))
     summary['updated_at']   = latest.get('updated_at', '')
-    open(SUMMARY_FILE, 'w').write(json.dumps(summary, separators=(',', ':')))
+    open(SUMMARY_FILE, 'w', encoding='utf-8').write(json.dumps(summary, separators=(',', ':')))
     print(f"daily_summary.json: {len(summary['entries'])} days, touched {sorted(dates_touched)}")
 
     # ── sw.js: bump cache key so clients pick up new data ────────────────────
     version = latest.get('updated_at', '') or datetime.utcnow().isoformat()
-    sw_version = re.sub(r'[^A-Za-z0-9]', '', version)[:16]
+    sw_version = hashlib.sha256(version.encode('utf-8')).hexdigest()[:16]
     bump_sw_version(sw_version)
     print(f"sw.js: cache key piscine-{sw_version}")
 
