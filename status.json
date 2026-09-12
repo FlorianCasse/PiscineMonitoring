@@ -1,1 +1,1 @@
-{"pump_on": true, "pump_power_w": 417.8, "reason": "Eau trop froide (0C)", "sensors_ok": false, "solar_energy_total_kwh": 15287.33, "solar_power_w": 2401.1, "swimmable": false, "temp_air_c": 25.5, "temp_water_c": 0, "updated_at": "2026-09-12T12:00:00.425507+02:00"}
+{"pump_on": false, "pump_power_w": 0, "reason": "Pompe arretee - filtration requise", "sensors_ok": false, "solar_energy_total_kwh": 15303.38, "solar_power_w": 1475.4, "swimmable": false, "temp_air_c": 32.3, "temp_water_c": 0, "updated_at": "2026-09-12T18:00:00.250732+02:00"}
