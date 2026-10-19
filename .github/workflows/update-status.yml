@@ -20,7 +20,7 @@ jobs:
       contains(toJson(github.event.client_payload), 'T18:00:')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Apply payload (status + history + daily summary)
         env:
